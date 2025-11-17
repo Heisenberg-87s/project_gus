@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://ccunvpcto86yk"]
+
+[ext_resource type="Script" uid="uid://fyxpt61dui2m" path="res://player/script/punch_area.gd" id="1_x1fkl"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_i7ork"]
+
+[node name="Area2D" type="Area2D"]
+collision_layer = 8
+collision_mask = 4
+script = ExtResource("1_x1fkl")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+scale = Vector2(1.48, 1.48)
+shape = SubResource("CircleShape2D_i7ork")
