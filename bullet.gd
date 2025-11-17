@@ -25,7 +25,9 @@ func _on_entered(other: Node) -> void:
 		return
 	# direct enemy body hit (legacy)
 	if other.is_in_group("enemies"):
-		if other.has_method("stun"):
+		if other.has_method("hurt"):
+			other.hurt()   # <<<--- ใช้แอนิเมชัน hurt
+		elif other.has_method("stun"):
 			other.stun(30.0)
 		elif other.has_method("knockout"):
 			other.knockout()
@@ -39,8 +41,11 @@ func _on_entered(other: Node) -> void:
 			other._apply_bullet_hit(self)
 		else:
 			var p = other.get_parent()
-			if p and p.has_method("stun"):
-				p.stun(30.0)
+			if p:
+				if p.has_method("hurt"):
+					p.hurt()
+				elif p.has_method("stun"):
+					p.stun(30.0)
 		queue_free()
 		return
 

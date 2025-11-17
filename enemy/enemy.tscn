@@ -6,6 +6,22 @@
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_ofsxj"]
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_xoplw"]
+atlas = ExtResource("2_ofsxj")
+region = Rect2(1, 17, 18, 34)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6yflr"]
+atlas = ExtResource("2_ofsxj")
+region = Rect2(1, 52, 18, 34)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gf88j"]
+atlas = ExtResource("2_ofsxj")
+region = Rect2(20, 17, 18, 34)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tbw0t"]
+atlas = ExtResource("2_ofsxj")
+region = Rect2(20, 52, 18, 34)
+
 [sub_resource type="AtlasTexture" id="AtlasTexture_ofsxj"]
 atlas = ExtResource("2_ofsxj")
 region = Rect2(1, 17, 18, 34)
@@ -34,22 +50,6 @@ region = Rect2(213, 111, 18, 34)
 atlas = ExtResource("2_ofsxj")
 region = Rect2(232, 111, 18, 34)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_xoplw"]
-atlas = ExtResource("2_ofsxj")
-region = Rect2(1, 17, 18, 34)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_6yflr"]
-atlas = ExtResource("2_ofsxj")
-region = Rect2(1, 52, 18, 34)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_gf88j"]
-atlas = ExtResource("2_ofsxj")
-region = Rect2(20, 17, 18, 34)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_tbw0t"]
-atlas = ExtResource("2_ofsxj")
-region = Rect2(20, 52, 18, 34)
-
 [sub_resource type="AtlasTexture" id="AtlasTexture_pmsee"]
 atlas = ExtResource("2_ofsxj")
 region = Rect2(39, 17, 18, 34)
@@ -64,6 +64,23 @@ region = Rect2(58, 17, 18, 34)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_5ffra"]
 animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xoplw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6yflr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gf88j")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tbw0t")
+}],
+"loop": true,
+"name": &"hurt",
+"speed": 12.0
+}, {
 "frames": [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_ofsxj")
@@ -107,23 +124,6 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_xoplw")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_6yflr")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_gf88j")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_tbw0t")
-}],
-"loop": true,
-"name": &"stunned",
-"speed": 12.0
-}, {
-"frames": [{
-"duration": 1.0,
 "texture": SubResource("AtlasTexture_ofsxj")
 }, {
 "duration": 1.0,
@@ -163,8 +163,9 @@ height = 32.0
 [node name="Enemy" type="CharacterBody2D"]
 y_sort_enabled = true
 scale = Vector2(3, 3)
+collision_layer = 4
+collision_mask = 11
 script = ExtResource("1_2mvqj")
-alert_move_speed = 250.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -7.705)
@@ -175,8 +176,8 @@ debug_color = Color(3.5616756e-06, 0.64768535, 0.21272892, 0.41960785)
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 y_sort_enabled = true
 sprite_frames = SubResource("SpriteFrames_5ffra")
-animation = &"stunned"
-frame_progress = 0.91803837
+animation = &"hurt"
+frame_progress = 0.70498383
 offset = Vector2(0, -17)
 
 [node name="Agent" type="NavigationAgent2D" parent="."]
