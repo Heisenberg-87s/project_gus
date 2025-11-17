@@ -392,6 +392,8 @@ func _on_player_spotted(player: Node) -> void:
 			agent.set_target_position(_last_known_player_pos)
 	# set facing while moving toward target
 	_set_facing_toward_point_continuous(_last_known_player_pos)
+	
+	stun(1.0)
 
 func _on_player_lost() -> void:
 	# nothing special — search timer will count down in alert state
