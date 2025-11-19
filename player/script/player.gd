@@ -5,7 +5,7 @@ enum Mode { NORMAL, GUN }
 enum State { IDLE, WALK, RUN, SNEAK, CRAWL, PUNCH }
 
 # ===== MOVEMENT CONFIG =====
-const MAX_SPEED: float = 150.0
+const MAX_SPEED: float = 450.0
 const ACCELERATION: float = 1400.0
 const FRICTION: float = 1500.0
 
@@ -61,6 +61,13 @@ var _temp_anim_timer: float = 0.0
 @export var shoot_anim_time: float = 0.12
 var _current_anim: String = ""
 
+# ===== Crouch / Sit stand-delay (new) =====
+# หมอบ/คลาน เข้าทันทีเมื่อกด แต่การลุก (ออกจาก SNEAK/CRAWL) จะหน่วงเวลา
+@export var stand_from_crouch_delay_min: float = 0.2
+@export var stand_from_crouch_delay_max: float = 0.4
+var _crouch_pending_stand: bool = false
+var _crouch_delay_timer: float = 0.0
+
 func _ready() -> void:
 	add_to_group("player")
 	_select_muzzle_for_cardinal(cardinal_direction)
@@ -74,6 +81,7 @@ func _process(delta: float) -> void:
 	var t: float = clamp(delta * offset_lerp_speed, 0.0, 1.0)
 	_current_offset_y = lerp(_current_offset_y, desired_offset, t)
 	animated_sprite.position = _base_sprite_pos + Vector2(0.0, _current_offset_y)
+
 	# ---- Timers ----
 	_gun_cooldown = max(_gun_cooldown - delta, 0.0) if _gun_cooldown > 0.0 else 0.0
 	_punch_timer = max(_punch_timer - delta, 0.0) if _punch_timer > 0.0 else 0.0
@@ -83,6 +91,39 @@ func _process(delta: float) -> void:
 		if _temp_anim_timer <= 0.0:
 			_temp_anim_name = ""
 			_update_animation(true)
+
+	# ---- Crouch/stand delay handling (new) ----
+	# If currently in SNEAK or CRAWL and player released the key, start pending stand timer.
+	# If player presses again while pending, cancel pending and remain crouched/crawling.
+	if state == State.SNEAK:
+		if Input.is_action_pressed("sneak"):
+			if _crouch_pending_stand:
+				_crouch_pending_stand = false
+				_crouch_delay_timer = 0.0
+		else:
+			if not _crouch_pending_stand:
+				_crouch_pending_stand = true
+				_crouch_delay_timer = lerp(stand_from_crouch_delay_min, stand_from_crouch_delay_max, randf())
+	elif state == State.CRAWL:
+		if Input.is_action_pressed("crawl"):
+			if _crouch_pending_stand:
+				_crouch_pending_stand = false
+				_crouch_delay_timer = 0.0
+		else:
+			if not _crouch_pending_stand:
+				_crouch_pending_stand = true
+				_crouch_delay_timer = lerp(stand_from_crouch_delay_min, stand_from_crouch_delay_max, randf())
+
+	# decrement crouch pending timer
+	if _crouch_pending_stand and _crouch_delay_timer > 0.0:
+		_crouch_delay_timer = max(_crouch_delay_timer - delta, 0.0)
+		if _crouch_delay_timer <= 0.0:
+			_crouch_pending_stand = false
+			# force re-evaluate state to allow standing
+			if _set_state(true):
+				_select_muzzle_for_cardinal(cardinal_direction)
+				_update_animation(true)
+
 	# ---- Update input ----
 	direction.x = Input.get_action_strength("right") - Input.get_action_strength("left")
 	direction.y = Input.get_action_strength("down") - Input.get_action_strength("up")
@@ -96,11 +137,14 @@ func _process(delta: float) -> void:
 			_try_shoot()
 		elif _punch_cooldown_timer <= 0.0 and state != State.PUNCH:
 			_start_punch()
+
 	# ---- State updates ----
+	# Note: _set_state() now respects _crouch_pending_stand (won't leave crouch/crawl while pending)
 	if state != State.PUNCH:
 		if _set_state():
 			_select_muzzle_for_cardinal(cardinal_direction)
 			_update_animation(true)
+
 	# ---- End punch ----
 	if state == State.PUNCH and not _punch_auto_end_by_anim and _punch_timer <= 0.0:
 		_end_punch()
@@ -152,6 +196,10 @@ func _select_muzzle_for_cardinal(card: Vector2) -> void:
 	_active_muzzle = m if m != null else muzzle_default
 
 func _set_state(force: bool=false) -> bool:
+	# If we are pending a stand from crouch/crawl, prevent leaving crouch until timer done (unless forced).
+	if _crouch_pending_stand and not force and (state == State.SNEAK or state == State.CRAWL):
+		return false
+
 	var new_state: int = (
 		State.CRAWL if Input.is_action_pressed("crawl") else
 		State.SNEAK if Input.is_action_pressed("sneak") else

@@ -1,20 +1,29 @@
 extends CharacterBody2D
 class_name Enemy
 
-# Movement / patrol config
+# การเคลื่อนที่ / ลาดตระเวน
 @export var speed: float = 120.0
 @export var acceleration: float = 1400.0
 @export var arrival_distance: float = 8.0
 @export var wait_time_at_point: float = 0.1
 
-@export var patrol_root_path: NodePath = NodePath("")   # Node that contains patrol points
+@export var patrol_root_path: NodePath = NodePath("")   # โหนดที่เก็บจุดลาดตระเวน
 @export var loop_patrol: bool = true
 @export var ping_patrol: bool = false
 
+
+# ตัวช่วยสถานะ SEARCH (จำเป็นสำหรับ _enter_search_state และ _handle_search_state)
+var _search_scan_cooldown: float = 5.0   # ทุก 5 วินาที เริ่มสแกน
+var _search_scan_timer: float = 0.0
+var _search_scan_index: int = 0
+const _SEARCH_SCAN_DIRS: Array = [Vector2.RIGHT, Vector2.UP, Vector2.LEFT, Vector2.DOWN]
+var _search_is_scanning: bool = false
+var _search_scan_dir_timer: float = 0.45
+
 # -----------------------
-# SIGHT / DETECTION CONFIG
+# การตั้งค่าการมอง/การตรวจจับ
 # -----------------------
-const LAYER_WALL: int = 1 << 0  # change bit if "walls" is on another layer
+const LAYER_WALL: int = 1 << 0  # เปลี่ยนบิตหากเลเยอร์ผนังต่างออกไป
 
 @export var sight_distance: float = 220.0
 @export var sight_fov_deg: float = 90.0
@@ -23,20 +32,27 @@ const LAYER_WALL: int = 1 << 0  # change bit if "walls" is on another layer
 @export var sight_debug_color_clear: Color = Color(0, 1, 0, 0.18)
 @export var sight_debug_color_alert: Color = Color(1, 0, 0, 0.25)
 
-# ALERT behavior tuning
-@export var alert_pause_duration: float = 1.0
-@export var alert_search_duration: float = 10.0
-@export var alert_sight_multiplier: float = 1.5
-@export var alert_move_speed: float = 160.0
+# การปรับแต่งพฤติกรรม COMBAT (เปลี่ยนจาก alert)
+@export var combat_pause_duration: float = 1.0
+@export var combat_search_duration: float = 10.0
+@export var combat_sight_multiplier: float = 1.5
+@export var combat_move_speed: float = 160.0
 
-# Scan (look-around) while paused / searching
-@export var alert_scan: bool = true
-@export var alert_scan_interval: float = 0.45
+# สแกน (มองรอบๆ) ขณะหยุด/ค้นหา 
+@export var combat_scan: bool = true
+@export var combat_scan_interval: float = 0.45
+
+# การปรับแต่ง STUN / คูลดาวน์
+@export var stun_duration: float = 1.0                     # เวลาโดนสตั้นเมื่อตรวจเจอ (หยุด 1 วินาที)
+@export var stun_cooldown_min: float = 8.0                 # คูลดาวน์ของเอฟเฟคสตั้นขั้นต่ำ (วินาที)
+@export var stun_cooldown_max: float = 10.0                # คูลดาวน์ของเอฟเฟคสตั้นสูงสุด (วินาที)
+var _stun_cooldown_timer: float = 0.0
+var _can_stun: bool = true
 
 # -----------------------
-# runtime state / AI
+# สถานะรันไทม์ / AI
 # -----------------------
-enum AIState { NORMAL, ALERT }
+enum AIState { NORMAL, COMBAT, SEARCH }
 var ai_state: int = AIState.NORMAL
 
 var _patrol_points: Array = []
@@ -55,8 +71,8 @@ var _current_anim: String = ""
 var is_stunned: bool = false
 
 var _original_sight_distance: float = 0.0
-var _alert_pause_timer: float = 0.0
-var _alert_search_timer: float = 0.0
+var _combat_pause_timer: float = 0.0
+var _combat_search_timer: float = 0.0
 var _last_known_player_pos: Vector2 = Vector2.ZERO
 var _pause_on_reach: bool = true
 
@@ -88,6 +104,12 @@ func _ready() -> void:
 			agent.target_desired_distance = arrival_distance
 
 func _physics_process(delta: float) -> void:
+	# นับลดตัวจับเวลา stun/cooldown
+	if _stun_cooldown_timer > 0.0:
+		_stun_cooldown_timer = max(_stun_cooldown_timer - delta, 0.0)
+		if _stun_cooldown_timer <= 0.0:
+			_can_stun = true
+
 	_update_sight_visual_and_detection()
 	if is_stunned:
 		velocity = Vector2.ZERO
@@ -97,8 +119,10 @@ func _physics_process(delta: float) -> void:
 	match ai_state:
 		AIState.NORMAL:
 			_patrol_state_process(delta)
-		AIState.ALERT:
-			_handle_alert_state(delta)
+		AIState.COMBAT:
+			_handle_combat_state(delta)
+		AIState.SEARCH:
+			_handle_search_state(delta)
 	_update_animation()
 
 func _reload_patrol_points() -> void:
@@ -298,64 +322,97 @@ func _on_player_spotted(player: Node) -> void:
 	_last_known_player_pos = (player as Node2D).global_position
 	_set_facing_toward_point_continuous(_last_known_player_pos)
 	_update_animation()
-	ai_state = AIState.ALERT
+	ai_state = AIState.COMBAT
 	_pause_on_reach = true
-	_alert_search_timer = alert_search_duration
-	sight_distance = _original_sight_distance * alert_sight_multiplier
+	_combat_search_timer = combat_search_duration
+	sight_distance = _original_sight_distance * combat_sight_multiplier
 	velocity = Vector2.ZERO
 	move_and_slide()
 	if agent:
 		if agent.has_method("set_target_position"):
 			agent.set_target_position(_last_known_player_pos)
 	_set_facing_toward_point_continuous(_last_known_player_pos)
-	stun(1.0)
+	# เรียกสตั้น แต่เฉพาะเมื่อคูลดาวน์อนุญาต
+	stun(stun_duration)
 
 func _on_player_lost() -> void:
 	pass
 
-func _handle_alert_state(delta: float) -> void:
+func _handle_combat_state(delta: float) -> void:
 	var player_node := _get_player_node()
 	if player_node != null and _last_player_visible:
 		_last_known_player_pos = (player_node as Node2D).global_position
-		_alert_search_timer = alert_search_duration
+		_combat_search_timer = combat_search_duration
 		_set_facing_toward_point_continuous(_last_known_player_pos)
-		_move_toward_target(_last_known_player_pos, alert_move_speed, delta)
+		_move_toward_target(_last_known_player_pos, combat_move_speed, delta)
 		return
 	if global_position.distance_to(_last_known_player_pos) > arrival_distance:
 		_set_facing_toward_point_continuous(_last_known_player_pos)
-		_move_toward_target(_last_known_player_pos, alert_move_speed, delta)
+		_move_toward_target(_last_known_player_pos, combat_move_speed, delta)
 		return
 	if _pause_on_reach:
 		_pause_on_reach = false
-		_alert_pause_timer = alert_pause_duration
+		_combat_pause_timer = combat_pause_duration
 		_scan_index = _closest_scan_index_to_vector(_last_facing)
-		_scan_timer = alert_scan_interval
+		_scan_timer = combat_scan_interval
 		velocity = Vector2.ZERO
 		move_and_slide()
 		_face_toward_point(_last_known_player_pos)
-	if _alert_pause_timer > 0.0:
-		_alert_pause_timer = max(_alert_pause_timer - delta, 0.0)
-		if alert_scan:
+	if _combat_pause_timer > 0.0:
+		_combat_pause_timer = max(_combat_pause_timer - delta, 0.0)
+		if combat_scan:
 			_scan_timer -= delta
 			if _scan_timer <= 0.0:
-				_scan_timer = alert_scan_interval
+				_scan_timer = combat_scan_interval
 				_scan_index = (_scan_index + 1) % _SCAN_DIRS.size()
 				_last_facing = _SCAN_DIRS[_scan_index]
 				_update_animation()
 		return
-	_alert_search_timer = max(_alert_search_timer - delta, 0.0)
-	if alert_scan:
+	_combat_search_timer = max(_combat_search_timer - delta, 0.0)
+	if combat_scan:
 		_scan_timer -= delta
 		if _scan_timer <= 0.0:
-			_scan_timer = alert_scan_interval
+			_scan_timer = combat_scan_interval
 			_scan_index = (_scan_index + 1) % _SCAN_DIRS.size()
 			_last_facing = _SCAN_DIRS[_scan_index]
 			_update_animation()
-	if _alert_search_timer <= 0.0:
+	if _combat_search_timer <= 0.0:
 		ai_state = AIState.NORMAL
 		sight_distance = _original_sight_distance
 		return
 
+# ---------- ตัวจัดการสถานะ SEARCH ----------
+func _enter_search_state() -> void:
+	# เริ่มการค้นหา: ใช้ combat_search_duration และเริ่มสแกน
+	_combat_search_timer = combat_search_duration
+	_scan_timer = combat_scan_interval
+	_scan_index = _closest_scan_index_to_vector(_last_facing)
+	_search_is_scanning = false
+	ai_state = AIState.SEARCH
+
+func _handle_search_state(delta: float) -> void:
+	# ถ้าผู้เล่นกลับมา ให้กลับไปสถานะ COMBAT
+	var player_node := _get_player_node()
+	if player_node != null and _last_player_visible:
+		ai_state = AIState.COMBAT
+		_combat_search_timer = combat_search_duration
+		return
+
+	# นับถอยหลังตัวจับเวลา search และสแกนแบบง่าย (หมุนทิศทาง)
+	_combat_search_timer = max(_combat_search_timer - delta, 0.0)
+	if combat_scan:
+		_scan_timer -= delta
+		if _scan_timer <= 0.0:
+			_scan_timer = combat_scan_interval
+			_scan_index = (_scan_index + 1) % _SCAN_DIRS.size()
+			_last_facing = _SCAN_DIRS[_scan_index]
+			_update_animation()
+
+	# ถ้าเวลาค้นหาหมด ให้กลับไปลาดตระเวน
+	if _combat_search_timer <= 0.0:
+		ai_state = AIState.NORMAL
+		sight_distance = _original_sight_distance
+# ---------- จบตัวจัดการ SEARCH ----------
 func _face_toward_point(world_point: Vector2) -> void:
 	var v = world_point - global_position
 	if v.length() == 0:
@@ -385,9 +442,14 @@ func _closest_scan_index_to_vector(vec: Vector2) -> int:
 	return best
 
 func stun(duration: float) -> void:
+	# อนุญาตให้สตั้นเฉพาะเมื่อคูลดาวน์อนุญาต
+	if not _can_stun:
+		return
 	if is_stunned:
 		return
 	is_stunned = true
+	# ป้องกันการสตั้นซ้ำจนกว่าจะตั้งคูลดาวน์หลังสตั้นจบ
+	_can_stun = false
 	velocity = Vector2.ZERO
 	move_and_slide()
 	if agent != null:
@@ -408,6 +470,10 @@ func stun(duration: float) -> void:
 func _end_stun() -> void:
 	is_stunned = false
 	_update_animation()
+	# ตั้งตัวจับเวลาคูลดาวน์ (สุ่มระหว่างค่าน้อยสุด/มากสุด)
+	var cd = lerp(stun_cooldown_min, stun_cooldown_max, randf())
+	_stun_cooldown_timer = cd
+	# _can_stun จะถูกเปิดอีกครั้งใน _physics_process เมื่อ timer เป็น 0
 
 func _get_player_node() -> Node:
 	var arr = get_tree().get_nodes_in_group("player")

@@ -19,9 +19,13 @@ config/icon="res://icon.svg"
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
-window/size/window_width_override=1366
-window/size/window_height_override=768
+window/size/window_width_override=1024
+window/size/window_height_override=576
 window/stretch/mode="viewport"
+
+[dotnet]
+
+project/assembly_name="Project_GUS (Copy)"
 
 [editor_plugins]
 
@@ -91,3 +95,4 @@ weapon_swap={
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
+renderer/rendering_method="gl_compatibility"
