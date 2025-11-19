@@ -1,8 +1,9 @@
-[gd_scene load_steps=7 format=4 uid="uid://c4p3qjwyk0h3h"]
+[gd_scene load_steps=8 format=4 uid="uid://c4p3qjwyk0h3h"]
 
 [ext_resource type="Texture2D" uid="uid://bcwwxc1y27goe" path="res://assets/spritesheet_tiles.png" id="1_m8u5f"]
 [ext_resource type="PackedScene" uid="uid://2jfjcm6ebujw" path="res://player/player.tscn" id="1_rupst"]
 [ext_resource type="PackedScene" uid="uid://v1cx2pek8gbo" path="res://enemy/enemy.tscn" id="3_m8u5f"]
+[ext_resource type="PackedScene" uid="uid://cd1fmymmeibu0" path="res://reloadui.tscn" id="4_is3ju"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_m8u5f"]
 vertices = PackedVector2Array(906, 522, 1273, 702.9219, 12.921875, 693.0703, 438, 522, 1273, 8.0078125, 906, 438, 8.0703125, 9.9765625, 438, 182, 522, 182, 522, 438)
@@ -623,6 +624,10 @@ autostart = true
 
 [node name="p2" type="Marker2D" parent="Ysortobject/Enemy2/PatrolPoints"]
 position = Vector2(0.66666675, -35.666668)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Control" parent="CanvasLayer" instance=ExtResource("4_is3ju")]
 
 [connection signal="timeout" from="Ysortobject/Enemy/NavTimer" to="Ysortobject/Navigation2D" method="_on_nav_timer_timeout"]
 [connection signal="timeout" from="Ysortobject/Enemy/NavTimer" to="Ysortobject/Enemy" method="_on_nav_timer_timeout"]

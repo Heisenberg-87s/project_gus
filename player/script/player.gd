@@ -5,7 +5,7 @@ enum Mode { NORMAL, GUN }
 enum State { IDLE, WALK, RUN, SNEAK, CRAWL, PUNCH }
 
 # ===== MOVEMENT CONFIG =====
-const MAX_SPEED: float = 450.0
+const MAX_SPEED: float = 150.0
 const ACCELERATION: float = 1400.0
 const FRICTION: float = 1500.0
 
