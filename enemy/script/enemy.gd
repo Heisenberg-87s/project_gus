@@ -52,7 +52,7 @@ var _can_stun: bool = true
 # -----------------------
 # สถานะรันไทม์ / AI
 # -----------------------
-enum AIState { NORMAL, COMBAT, SEARCH }
+enum AIState { NORMAL, COMBAT, SEARCH, DETECT }
 var ai_state: int = AIState.NORMAL
 
 var _patrol_points: Array = []
