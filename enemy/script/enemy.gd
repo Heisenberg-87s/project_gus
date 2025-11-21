@@ -50,6 +50,13 @@ var _stun_cooldown_timer: float = 0.0
 var _can_stun: bool = true
 
 # -----------------------
+# เพิ่มการตอบสนองเสียง: หยุดชั่วคราว (stun-like), หันหน้าไปยังแหล่งกำเนิด แล้วค่อยเดินไปตรวจสอบ
+# -----------------------
+@export var sound_reaction_pause: float = 0.35   # เวลาหยุดชั่วคราวเมื่อได้ยินเสียง (วินาที)
+var _sound_reaction_timer: float = 0.0
+var _sound_reaction_waiting: bool = false
+
+# -----------------------
 # สถานะรันไทม์ / AI
 # -----------------------
 enum AIState { NORMAL, COMBAT, SEARCH, DETECT }
@@ -86,6 +93,25 @@ var _last_player_visible: bool = false
 signal player_spotted(player)
 signal player_lost()
 
+# ----------------------------------------------------------------
+# Helper: safe agent next position (returns null if agent has no path)
+func _get_agent_next_position_safe():
+	if agent == null:
+		return null
+	# Prefer method calls if available (handles API differences)
+	if agent.has_method("get_next_path_position"):
+		var np = agent.get_next_path_position()
+		# Some implementations return Vector2.ZERO when no next - treat as none
+		if np == Vector2.ZERO:
+			return null
+		return np
+	elif "next_path_position" in agent:
+		var np2 = agent.next_path_position
+		if np2 == Vector2.ZERO:
+			return null
+		return np2
+	return null
+
 func _ready() -> void:
 	_original_sight_distance = sight_distance
 	if sight_debug and _sight_polygon == null:
@@ -103,6 +129,11 @@ func _ready() -> void:
 	if agent:
 		if "target_desired_distance" in agent:
 			agent.target_desired_distance = arrival_distance
+		# debug print about agent navigation layers (helpful if agent can't build path)
+		if "navigation_layers" in agent:
+			print("Enemy: Agent navigation_layers =", agent.navigation_layers)
+		else:
+			print("Enemy: Agent available but 'navigation_layers' property not found (check Godot version).")
 
 func _physics_process(delta: float) -> void:
 	# นับลดตัวจับเวลา stun/cooldown
@@ -112,6 +143,24 @@ func _physics_process(delta: float) -> void:
 			_can_stun = true
 
 	_update_sight_visual_and_detection()
+
+	# หากกำลังรอการตอบสนองจากเสียง (face -> pause) ให้นับถอยหลัง และยังไม่ให้ AI หลุดไปทำอย่างอื่น
+	if _sound_reaction_waiting:
+		_sound_reaction_timer = max(_sound_reaction_timer - delta, 0.0)
+		velocity = Vector2.ZERO
+		move_and_slide()
+		# แสดงอนิเมชัน "stun" (ถ้ามี) ระหว่างรอ
+		_update_animation()
+		if _sound_reaction_timer <= 0.0:
+			_sound_reaction_waiting = false
+			# หลังจากรอเสร็จ ให้สั่ง agent ให้ตั้งเป้าตำแหน่งเสียง (ถ้ามี) เพื่อเริ่มเดิน
+			if agent:
+				if agent.has_method("set_target_position"):
+					agent.set_target_position(_last_known_player_pos)
+				elif "target_position" in agent:
+					agent.target_position = _last_known_player_pos
+		return
+
 	# ถ้าอยู่ในสถานะ stunned หรือ ถูก hit (is_hit) ให้หยุดทำงานชั่วคราว
 	if is_stunned or is_hit:
 		velocity = Vector2.ZERO
@@ -125,8 +174,11 @@ func _physics_process(delta: float) -> void:
 			_handle_combat_state(delta)
 		AIState.SEARCH:
 			_handle_search_state(delta)
+		AIState.DETECT:
+			_handle_detect_state(delta)
 	_update_animation()
 
+# ----------------------------------------------------------------
 func _reload_patrol_points() -> void:
 	_patrol_points.clear()
 	if patrol_root_path == NodePath("") or not has_node(patrol_root_path):
@@ -154,6 +206,8 @@ func _reload_patrol_points() -> void:
 		if child is Node2D:
 			_patrol_points.append(child.global_position)
 
+# ----------------------------------------------------------------
+# Patrol: use agent path when available. If agent exists but has no path, stop (avoid running through walls).
 func _patrol_state_process(delta: float) -> void:
 	if _patrol_points.size() == 0:
 		velocity = velocity.move_toward(Vector2.ZERO, acceleration * delta)
@@ -162,8 +216,21 @@ func _patrol_state_process(delta: float) -> void:
 	var target_pos: Vector2 = _patrol_points[_patrol_index]
 	if agent != null:
 		_set_agent_target(target_pos)
-	var next_pos = _get_agent_next_position()
-	var move_target: Vector2 = (next_pos as Vector2) if next_pos != null else target_pos
+	var next_pos = _get_agent_next_position_safe()
+	# If agent exists, require a next_path_position before moving; otherwise stop and wait for path
+	var move_target: Vector2
+	if agent != null:
+		if next_pos != null:
+			move_target = next_pos
+		else:
+			# No path yet — don't move straight to target_pos (would go through obstacles).
+			print("Enemy: agent has no path (patrol). Check NavigationRegion / agent navigation_layers.")
+			velocity = velocity.move_toward(Vector2.ZERO, acceleration * delta)
+			move_and_slide()
+			return
+	else:
+		move_target = target_pos
+
 	if global_position.distance_to(target_pos) <= arrival_distance:
 		global_position = target_pos
 		velocity = Vector2.ZERO
@@ -179,6 +246,7 @@ func _patrol_state_process(delta: float) -> void:
 		_last_facing = dir.normalized()
 	_move_toward_target(move_target, speed, delta)
 
+# ----------------------------------------------------------------
 func _move_toward_target(world_pos: Vector2, move_speed: float, delta: float) -> void:
 	var dir = world_pos - global_position
 	if dir.length() <= 1.0:
@@ -188,6 +256,7 @@ func _move_toward_target(world_pos: Vector2, move_speed: float, delta: float) ->
 		velocity = velocity.move_toward(desired, acceleration * delta)
 	move_and_slide()
 
+# ----------------------------------------------------------------
 func _set_agent_target(target_pos: Vector2) -> void:
 	if agent == null:
 		return
@@ -198,6 +267,7 @@ func _set_agent_target(target_pos: Vector2) -> void:
 	elif agent.has_method("set_target_location"):
 		agent.set_target_location(target_pos)
 
+# ----------------------------------------------------------------
 func _get_agent_next_position():
 	if agent == null:
 		return null
@@ -207,6 +277,7 @@ func _get_agent_next_position():
 		return agent.next_path_position
 	return null
 
+# ----------------------------------------------------------------
 func _advance_patrol_index() -> void:
 	_wait_timer = 0.0
 	if ping_patrol:
@@ -228,7 +299,33 @@ func _advance_patrol_index() -> void:
 			else:
 				_patrol_index = _patrol_points.size() - 1
 
+# ----------------------------------------------------------------
 func _update_animation() -> void:
+	# ถ้ากำลังรอการตอบสนองจากเสียง ให้แสดงอนิเมชัน "stun" หากมี (และให้หันตาม _last_facing)
+	if _sound_reaction_waiting:
+		# ใช้ logic เดียวกับการเลือก animation ปกติ แต่พยายามหา stun_{dir} ก่อน
+		var dir_vec: Vector2 = _last_facing
+		if velocity.length() > 5.0:
+			dir_vec = velocity.normalized()
+		var dir_str: String = "side"
+		if abs(dir_vec.y) > abs(dir_vec.x):
+			dir_str = "up" if dir_vec.y < 0.0 else "down"
+		else:
+			dir_str = "side"
+		# directional stun animation first
+		var stun_candidates: Array = ["stun_%s" % dir_str, "stun"]
+		for s in stun_candidates:
+			if _anim != null and _anim.sprite_frames != null and _anim.sprite_frames.has_animation(s):
+				if _current_anim != s:
+					_current_anim = s
+					_anim.animation = s
+					_anim.play()
+				if dir_str == "side":
+					_anim.flip_h = (dir_vec.x > 0.0)
+				else:
+					_anim.flip_h = false
+				return
+
 	if _anim == null:
 		return
 	if _anim.sprite_frames == null:
@@ -278,6 +375,7 @@ func _update_animation() -> void:
 	else:
 		_anim.flip_h = false
 
+# ----------------------------------------------------------------
 func _update_sight_visual_and_detection() -> void:
 	if not sight_debug and sight_rays <= 0:
 		return
@@ -333,6 +431,7 @@ func _update_sight_visual_and_detection() -> void:
 		_on_player_lost()
 	_last_player_visible = player_visible
 
+# ----------------------------------------------------------------
 func _on_player_spotted(player: Node) -> void:
 	_last_known_player_pos = (player as Node2D).global_position
 	_set_facing_toward_point_continuous(_last_known_player_pos)
@@ -347,24 +446,59 @@ func _on_player_spotted(player: Node) -> void:
 		if agent.has_method("set_target_position"):
 			agent.set_target_position(_last_known_player_pos)
 	_set_facing_toward_point_continuous(_last_known_player_pos)
-	# เรียกสตั้น แต่เฉพาะเมื่อคูลดาวน์อนุญาต
+	# เรียกสตั้น แต่เฉพาะเมื่อคูลดาว์นอนุญาต
 	stun(stun_duration)
 
 func _on_player_lost() -> void:
 	pass
 
+# ----------------------------------------------------------------
+# Combat: use agent's next path positions. If agent exists but has no path, stop and print debug.
 func _handle_combat_state(delta: float) -> void:
 	var player_node := _get_player_node()
+	# If player visible, prefer agent path to follow; otherwise fallback to last known pos behaviors
 	if player_node != null and _last_player_visible:
 		_last_known_player_pos = (player_node as Node2D).global_position
 		_combat_search_timer = combat_search_duration
+		# set agent target for pathfinding
+		if agent != null:
+			_set_agent_target(_last_known_player_pos)
+			var next_pos = _get_agent_next_position_safe()
+			if next_pos != null:
+				_set_facing_toward_point_continuous(next_pos)
+				_move_toward_target(next_pos, combat_move_speed, delta)
+				return
+			else:
+				# Agent doesn't have a path yet -> wait (avoid going straight through obstacles)
+				print("Enemy: agent has no path (combat to visible player). Check NavigationRegion / layers.")
+				velocity = Vector2.ZERO
+				move_and_slide()
+				return
+		# fallback: no agent => direct move
 		_set_facing_toward_point_continuous(_last_known_player_pos)
 		_move_toward_target(_last_known_player_pos, combat_move_speed, delta)
 		return
+
+	# Not currently seeing player, move toward last known pos using path if available
 	if global_position.distance_to(_last_known_player_pos) > arrival_distance:
-		_set_facing_toward_point_continuous(_last_known_player_pos)
-		_move_toward_target(_last_known_player_pos, combat_move_speed, delta)
-		return
+		if agent != null:
+			_set_agent_target(_last_known_player_pos)
+			var np = _get_agent_next_position_safe()
+			if np != null:
+				_set_facing_toward_point_continuous(np)
+				_move_toward_target(np, combat_move_speed, delta)
+				return
+			else:
+				print("Enemy: agent has no path (combat follow).")
+				velocity = Vector2.ZERO
+				move_and_slide()
+				return
+		else:
+			_set_facing_toward_point_continuous(_last_known_player_pos)
+			_move_toward_target(_last_known_player_pos, combat_move_speed, delta)
+			return
+
+	# reached last known pos -> enter pause/search
 	if _pause_on_reach:
 		_pause_on_reach = false
 		_combat_pause_timer = combat_pause_duration
@@ -373,6 +507,8 @@ func _handle_combat_state(delta: float) -> void:
 		velocity = Vector2.ZERO
 		move_and_slide()
 		_face_toward_point(_last_known_player_pos)
+		return
+
 	if _combat_pause_timer > 0.0:
 		_combat_pause_timer = max(_combat_pause_timer - delta, 0.0)
 		if combat_scan:
@@ -399,11 +535,14 @@ func _handle_combat_state(delta: float) -> void:
 # ---------- ตัวจัดการสถานะ SEARCH ----------
 func _enter_search_state() -> void:
 	# เริ่มการค้นหา: ใช้ combat_search_duration และเริ่มสแกน
+	# ตั้งค่าเหมือน COMBAT เพื่อให้ sprite หัน/แสดงผลเหมือนกัน
 	_combat_search_timer = combat_search_duration
 	_scan_timer = combat_scan_interval
 	_scan_index = _closest_scan_index_to_vector(_last_facing)
 	_search_is_scanning = false
 	ai_state = AIState.SEARCH
+	# อัพเดตอนิเมชันทันทีเพื่อให้ sprite หันตามทิศเริ่มต้นของการค้นหา
+	_update_animation()
 
 func _handle_search_state(delta: float) -> void:
 	# ถ้าผู้เล่นกลับมา ให้กลับไปสถานะ COMBAT
@@ -413,17 +552,18 @@ func _handle_search_state(delta: float) -> void:
 		_combat_search_timer = combat_search_duration
 		return
 
-	# นับถอยหลังตัวจับเวลา search และสแกนแบบง่าย (หมุนทิศทาง)
+	# นับถอยหลังตัวจับเวลา search และสแกนแบบเดียวกับ COMBAT (หมุนเป็นช่วงๆ)
 	_combat_search_timer = max(_combat_search_timer - delta, 0.0)
 	if combat_scan:
 		_scan_timer -= delta
 		if _scan_timer <= 0.0:
 			_scan_timer = combat_scan_interval
 			_scan_index = (_scan_index + 1) % _SCAN_DIRS.size()
+			# เปลี่ยน _last_facing เป็นทิศที่จะสแกน (cardinal) เพื่อให้ animation/flip ถูกต้อง
 			_last_facing = _SCAN_DIRS[_scan_index]
 			_update_animation()
 
-	# ถ้าเวลาค้นหาหมด ให้กลับไปลาดตระเวน
+	# ถ้าเวลาค้นหาหมด ให้กลับไปลาดตระเวน (เหมือน COMBAT)
 	if _combat_search_timer <= 0.0:
 		ai_state = AIState.NORMAL
 		sight_distance = _original_sight_distance
@@ -457,13 +597,13 @@ func _closest_scan_index_to_vector(vec: Vector2) -> int:
 	return best
 
 func stun(duration: float) -> void:
-	# อนุญาตให้สตั้นเฉพาะเมื่อคูลดาวน์อนุญาต
+	# อนุญาตให้สตั้นเฉพาะเมื่อคูลดาว์นอนุญาต
 	if not _can_stun:
 		return
 	if is_stunned:
 		return
 	is_stunned = true
-	# ป้องกันการสตั้นซ้ำจนกว่าจะตั้งคูลดาวน์หลังสตั้นจบ
+	# ป้องกันการสตั้นซ้ำจนกว่าจะตั้งคูลดาว์นหลังสตั้นจบ
 	_can_stun = false
 	velocity = Vector2.ZERO
 	move_and_slide()
@@ -485,12 +625,12 @@ func stun(duration: float) -> void:
 func _end_stun() -> void:
 	is_stunned = false
 	_update_animation()
-	# ตั้งตัวจับเวลาคูลดาวน์ (สุ่มระหว่างค่าน้อยสุด/มากสุด)
+	# ตั้งตัวจับเวลาคูลดาว์น (สุ่มระหว่างค่าน้อยสุด/มากสุด)
 	var cd = lerp(stun_cooldown_min, stun_cooldown_max, randf())
 	_stun_cooldown_timer = cd
 	# _can_stun จะถูกเปิดอีกครั้งใน _physics_process เมื่อ timer เป็น 0
 
-# ใหม่: ถูกโจมตี (hit) ชั่วคราว — หยุดการเคลื่อนที่/AI ชั่วคราว แต่ไม่เกี่ยวกับ stun-cooldown
+# ใหม่: ถูกโจมตี (hit) ชั่วคราว — หยุดการเคลื่อนที่/AI ชั่วคราว แต่ไม่เกี่ยวกับ stun
 func hit(duration: float) -> void:
 	# หากกำลัง stun อยู่หรือกำลังถูก hit อยู่ ให้ข้าม
 	if is_stunned or is_hit:
@@ -516,6 +656,72 @@ func hit(duration: float) -> void:
 
 func _end_hit() -> void:
 	is_hit = false
+	_update_animation()
+
+# ---------- การตอบสนองต่อ "เสียง" (sound detection) ----------
+# ฟังก์ชันที่ SoundArea จะเรียก: on_sound_detected(player, sound_position)
+# และสำรองชื่ออื่น ๆ: investigate_sound(sound_pos, player), set_investigate_target(player), set_target(player)
+func on_sound_detected(player: Node, sound_position: Vector2) -> void:
+	# ถ้าโดนสตั้นจริง ๆ ให้ไม่ตอบสนองเสียง
+	if is_stunned:
+		return
+	# บันทึกตำแหน่งเสียงหรือใช้ตำแหน่งผู้เล่นถ้าไม่มี
+	if sound_position != Vector2.ZERO:
+		_last_known_player_pos = sound_position
+	elif player != null and is_instance_valid(player):
+		_last_known_player_pos = (player as Node2D).global_position
+	else:
+		_last_known_player_pos = global_position
+
+	# เปลี่ยนเป็น COMBAT ทันทีตามที่ขอ
+	# ตั้งค่าเหมือน _on_player_spotted เพื่อให้พฤติกรรมการไล่/หันหน้าเหมือนการเห็นผู้เล่น
+	ai_state = AIState.COMBAT
+	_pause_on_reach = true
+	_combat_search_timer = combat_search_duration
+	sight_distance = _original_sight_distance * combat_sight_multiplier
+	velocity = Vector2.ZERO
+	move_and_slide()
+	# ถ้ามี NavigationAgent ให้ตั้งเป้าตำแหน่งเสียงเลย
+	if agent:
+		if agent.has_method("set_target_position"):
+			agent.set_target_position(_last_known_player_pos)
+		elif "target_position" in agent:
+			agent.target_position = _last_known_player_pos
+	# หันหน้าตามตำแหน่งเสียง (continuous) และอัพเดตอนิเมชันทันที
+	_set_facing_toward_point_continuous(_last_known_player_pos)
+	_update_animation()
+	# (ไม่เรียก stun โดยอัตโนมัติ — ถ้าต้องการให้สตั้นก่อน คอล์ฟังก์ชัน stun(stun_duration) ได้)
+	emit_signal("player_spotted", player)  # คงสัญญาณไว้ในกรณีระบบอื่นฟังอยู่
+
+# ---------- จบการตอบสนองต่อ "เสียง" ----------
+func _handle_detect_state(delta: float) -> void:
+	# หากยังอยู่ในช่วงรอการตอบสนอง (handled earlier in _physics_process) จะไม่มาถึงที่นี่
+	# เคลื่อนที่ไปยังตำแหน่งเสียง (_last_known_player_pos) ด้วยความเร็วปกติ
+	if agent != null:
+		_set_agent_target(_last_known_player_pos)
+		var np = _get_agent_next_position_safe()
+		if np != null:
+			_set_facing_toward_point_continuous(np)
+			_move_toward_target(np, speed, delta)
+			# ถ้ามาถึงเป้าหมายจริง ๆ แล้วเปลี่ยนเป็น SEARCH
+			if global_position.distance_to(_last_known_player_pos) <= arrival_distance:
+				ai_state = AIState.SEARCH
+				_enter_search_state()
+				_update_animation()
+			return
+		else:
+			print("Enemy: agent has no path (detect).")
+			velocity = Vector2.ZERO
+			move_and_slide()
+			return
+
+	# fallback if no agent
+	if global_position.distance_to(_last_known_player_pos) > arrival_distance:
+		_set_facing_toward_point_continuous(_last_known_player_pos)
+		_move_toward_target(_last_known_player_pos, speed, delta)
+		return
+	ai_state = AIState.SEARCH
+	_enter_search_state()
 	_update_animation()
 
 func _get_player_node() -> Node:

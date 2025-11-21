@@ -30,6 +30,11 @@ var _active_muzzle: Marker2D = null
 @onready var _punch_point_left: Node2D = get_node_or_null("PunchPoint_left") as Node2D
 @onready var _punch_point_right: Node2D = get_node_or_null("PunchPoint_right") as Node2D
 
+# ==== SOUND AREA ====
+const SOUND_AREA_SCENE = preload("res://player/sound_area.tscn")
+@export var sound_detect_radius: float = 300.0
+@export var sound_detect_duration: float = 0.25
+
 # ===== MODE/STATE/INPUT VARS =====
 var mode: int = Mode.NORMAL
 var state: int = State.IDLE
@@ -137,6 +142,16 @@ func _process(delta: float) -> void:
 			_try_shoot()
 		elif _punch_cooldown_timer <= 0.0 and state != State.PUNCH:
 			_start_punch()
+	if Input.is_action_just_pressed("sound_detect"):
+		var sa = SOUND_AREA_SCENE.instantiate()
+		sa.global_position = global_position    # หรือใช้ muzzle position ถ้าต้องการ
+		sa.radius = sound_detect_radius
+		sa.duration = sound_detect_duration
+		sa.source_player = self
+	# ปรับ collision mask/layer ถ้าจำเป็น:
+	# sa.collision_layer = 1
+	# sa.collision_mask = 2  # ตรวจหาชั้นที่ Hurtbox ของศัตรูอยู่
+		get_tree().current_scene.add_child(sa)
 
 	# ---- State updates ----
 	# Note: _set_state() now respects _crouch_pending_stand (won't leave crouch/crawl while pending)
@@ -149,11 +164,7 @@ func _process(delta: float) -> void:
 	if state == State.PUNCH and not _punch_auto_end_by_anim and _punch_timer <= 0.0:
 		_end_punch()
 	_update_animation()
-<<<<<<< HEAD
 	# ---- Reload scene ----
-=======
-	# ---- Reload Scene ----
->>>>>>> 5eb45d8957794626ee802b3b5f347896606b0020
 	if Input.is_action_just_pressed("reload_scene"):
 		get_tree().reload_current_scene()
 

@@ -586,7 +586,6 @@ position = Vector2(594, 426.00003)
 
 [node name="Enemy" parent="Ysortobject" instance=ExtResource("3_m8u5f")]
 position = Vector2(403, 563)
-collision_mask = 10
 wait_time_at_point = 0.0
 patrol_root_path = NodePath("PatrolPoints")
 
@@ -611,7 +610,6 @@ position = Vector2(-5, -67.33333)
 
 [node name="Enemy2" parent="Ysortobject" instance=ExtResource("3_m8u5f")]
 position = Vector2(1164, 421)
-collision_mask = 10
 wait_time_at_point = 0.6
 patrol_root_path = NodePath("PatrolPoints")
 
