@@ -149,7 +149,11 @@ func _process(delta: float) -> void:
 	if state == State.PUNCH and not _punch_auto_end_by_anim and _punch_timer <= 0.0:
 		_end_punch()
 	_update_animation()
+<<<<<<< HEAD
 	# ---- Reload scene ----
+=======
+	# ---- Reload Scene ----
+>>>>>>> 5eb45d8957794626ee802b3b5f347896606b0020
 	if Input.is_action_just_pressed("reload_scene"):
 		get_tree().reload_current_scene()
 
