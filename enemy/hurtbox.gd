@@ -1,9 +1,9 @@
 extends Area2D
 # Hurtbox Area for Enemy
 # - Child of Enemy node.
-# - Calls parent.stun(duration) on bullet/punch hits.
-@export var bullet_stun_duration: float = 30.0
-@export var punch_stun_duration: float = 10.0
+# - Calls parent.hit(duration) on bullet/punch hits (instead of stun).
+@export var bullet_hit_duration: float = 30.0
+@export var punch_hit_duration: float = 10.0
 
 @onready var _enemy := get_parent()
 
@@ -35,8 +35,8 @@ func _on_body_entered(body: Node) -> void:
 
 func _apply_bullet_hit(source: Node) -> void:
 	if _enemy and is_instance_valid(_enemy):
-		if _enemy.has_method("stun"):
-			_enemy.stun(bullet_stun_duration)
+		if _enemy.has_method("hit"):
+			_enemy.hit(bullet_hit_duration)
 		elif _enemy.has_method("take_damage"):
 			_enemy.take_damage(30)
 	# destroy bullet if it exposes queue_free
@@ -45,7 +45,7 @@ func _apply_bullet_hit(source: Node) -> void:
 
 func _apply_punch_hit(source: Node) -> void:
 	if _enemy and is_instance_valid(_enemy):
-		if _enemy.has_method("stun"):
-			_enemy.stun(punch_stun_duration)
+		if _enemy.has_method("hit"):
+			_enemy.hit(punch_hit_duration)
 		elif _enemy.has_method("take_damage"):
 			_enemy.take_damage(10)

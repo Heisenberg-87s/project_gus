@@ -149,6 +149,9 @@ func _process(delta: float) -> void:
 	if state == State.PUNCH and not _punch_auto_end_by_anim and _punch_timer <= 0.0:
 		_end_punch()
 	_update_animation()
+	# ---- Reload scene ----
+	if Input.is_action_just_pressed("reload_scene"):
+		get_tree().reload_current_scene()
 
 func _physics_process(delta: float) -> void:
 	var target_speed: float = _get_speed_for_state()

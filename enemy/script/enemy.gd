@@ -52,7 +52,7 @@ var _can_stun: bool = true
 # -----------------------
 # สถานะรันไทม์ / AI
 # -----------------------
-enum AIState { NORMAL, COMBAT, SEARCH }
+enum AIState { NORMAL, COMBAT, SEARCH, DETECT }
 var ai_state: int = AIState.NORMAL
 
 var _patrol_points: Array = []
@@ -69,6 +69,7 @@ var _current_anim: String = ""
 @onready var _sight_polygon: Polygon2D = get_node_or_null("SightCone") as Polygon2D
 
 var is_stunned: bool = false
+var is_hit: bool = false   # ใหม่: ถูกโจมตี (hit) ชั่วคราว (ต่างจาก stun)
 
 var _original_sight_distance: float = 0.0
 var _combat_pause_timer: float = 0.0
@@ -111,7 +112,8 @@ func _physics_process(delta: float) -> void:
 			_can_stun = true
 
 	_update_sight_visual_and_detection()
-	if is_stunned:
+	# ถ้าอยู่ในสถานะ stunned หรือ ถูก hit (is_hit) ให้หยุดทำงานชั่วคราว
+	if is_stunned or is_hit:
 		velocity = Vector2.ZERO
 		move_and_slide()
 		_update_animation()
@@ -241,6 +243,19 @@ func _update_animation() -> void:
 		dir_str = "side"
 	var state_str: String = "idle" if velocity.length() <= 5.0 else "walk"
 	var anim_name: String = state_str + "_" + dir_str
+	# ถ้ามี animation "hit" หรือ "stun" ให้แสดงตามสถานะ
+	if is_stunned and _anim.sprite_frames.has_animation("stun"):
+		if _current_anim != "stun":
+			_current_anim = "stun"
+			_anim.animation = "stun"
+			_anim.play()
+		return
+	if is_hit and _anim.sprite_frames.has_animation("hit"):
+		if _current_anim != "hit":
+			_current_anim = "hit"
+			_anim.animation = "hit"
+			_anim.play()
+		return
 	if _anim.sprite_frames.has_animation(anim_name):
 		if _current_anim != anim_name:
 			_current_anim = anim_name
@@ -474,6 +489,34 @@ func _end_stun() -> void:
 	var cd = lerp(stun_cooldown_min, stun_cooldown_max, randf())
 	_stun_cooldown_timer = cd
 	# _can_stun จะถูกเปิดอีกครั้งใน _physics_process เมื่อ timer เป็น 0
+
+# ใหม่: ถูกโจมตี (hit) ชั่วคราว — หยุดการเคลื่อนที่/AI ชั่วคราว แต่ไม่เกี่ยวกับ stun-cooldown
+func hit(duration: float) -> void:
+	# หากกำลัง stun อยู่หรือกำลังถูก hit อยู่ ให้ข้าม
+	if is_stunned or is_hit:
+		return
+	is_hit = true
+	velocity = Vector2.ZERO
+	move_and_slide()
+	if agent != null:
+		if agent.has_method("set_target_position"):
+			agent.set_target_position(global_position)
+		elif "target_position" in agent:
+			agent.target_position = global_position
+	# เล่นอนิเมชัน "hit" หากมี มิฉะนั้นให้เรียกอัพเดตอนิเมชันปกติ
+	if _anim != null and _anim.sprite_frames != null and _anim.sprite_frames.has_animation("hit"):
+		_current_anim = "hit"
+		_anim.animation = "hit"
+		_anim.play()
+	else:
+		_update_animation()
+	await get_tree().create_timer(duration).timeout
+	if is_hit:
+		_end_hit()
+
+func _end_hit() -> void:
+	is_hit = false
+	_update_animation()
 
 func _get_player_node() -> Node:
 	var arr = get_tree().get_nodes_in_group("player")
