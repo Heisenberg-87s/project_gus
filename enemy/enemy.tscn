@@ -168,6 +168,8 @@ collision_mask = 11
 platform_floor_layers = 4294967294
 platform_wall_layers = 1
 script = ExtResource("1_2mvqj")
+sight_origin_path = NodePath("SightOrigin")
+sound_reaction_pause = 0.6
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -5.71)
@@ -196,3 +198,6 @@ script = ExtResource("3_ppra6")
 position = Vector2(0, -17)
 shape = SubResource("CapsuleShape2D_p200p")
 debug_color = Color(0.9979996, 0, 0.1636788, 0.41960785)
+
+[node name="SightOrigin" type="Marker2D" parent="."]
+position = Vector2(0, 0.66666603)

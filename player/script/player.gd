@@ -35,6 +35,10 @@ const SOUND_AREA_SCENE = preload("res://player/sound_area.tscn")
 @export var sound_detect_radius: float = 300.0
 @export var sound_detect_duration: float = 0.25
 
+# -- Sound emit cooldown (prevents spamming the sound area) --
+@export var sound_emit_cooldown_time: float = 1.2
+var _sound_emit_cooldown_timer: float = 0.0
+
 # ===== MODE/STATE/INPUT VARS =====
 var mode: int = Mode.NORMAL
 var state: int = State.IDLE
@@ -91,6 +95,9 @@ func _process(delta: float) -> void:
 	_gun_cooldown = max(_gun_cooldown - delta, 0.0) if _gun_cooldown > 0.0 else 0.0
 	_punch_timer = max(_punch_timer - delta, 0.0) if _punch_timer > 0.0 else 0.0
 	_punch_cooldown_timer = max(_punch_cooldown_timer - delta, 0.0) if _punch_cooldown_timer > 0.0 else 0.0
+	# decrement sound emit cooldown
+	if _sound_emit_cooldown_timer > 0.0:
+		_sound_emit_cooldown_timer = max(_sound_emit_cooldown_timer - delta, 0.0)
 	if _temp_anim_timer > 0.0:
 		_temp_anim_timer = max(_temp_anim_timer - delta, 0.0)
 		if _temp_anim_timer <= 0.0:
@@ -143,15 +150,22 @@ func _process(delta: float) -> void:
 		elif _punch_cooldown_timer <= 0.0 and state != State.PUNCH:
 			_start_punch()
 	if Input.is_action_just_pressed("sound_detect"):
-		var sa = SOUND_AREA_SCENE.instantiate()
-		sa.global_position = global_position    # หรือใช้ muzzle position ถ้าต้องการ
-		sa.radius = sound_detect_radius
-		sa.duration = sound_detect_duration
-		sa.source_player = self
-	# ปรับ collision mask/layer ถ้าจำเป็น:
-	# sa.collision_layer = 1
-	# sa.collision_mask = 2  # ตรวจหาชั้นที่ Hurtbox ของศัตรูอยู่
-		get_tree().current_scene.add_child(sa)
+		# check emit cooldown before creating a sound area
+		if _sound_emit_cooldown_timer <= 0.0:
+			var sa = SOUND_AREA_SCENE.instantiate()
+			sa.global_position = global_position    # หรือใช้ muzzle position ถ้าต้องการ
+			sa.radius = sound_detect_radius
+			sa.duration = sound_detect_duration
+			sa.source_player = self
+			# ปรับ collision mask/layer ถ้าจำเป็น:
+			# sa.collision_layer = 1
+			# sa.collision_mask = 2  # ตรวจหาชั้นที่ Hurtbox ของศัตรูอยู่
+			get_tree().current_scene.add_child(sa)
+			_sound_emit_cooldown_timer = sound_emit_cooldown_time
+		else:
+			# ถ้าต้องการ feedback ตอน cooldown ยังไม่หมด ให้ใส่ที่นี่ (เสียง/UI)
+			# ตัวอย่าง: print("Sound on cooldown:", _sound_emit_cooldown_timer)
+			pass
 
 	# ---- State updates ----
 	# Note: _set_state() now respects _crouch_pending_stand (won't leave crouch/crawl while pending)

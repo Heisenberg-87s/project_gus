@@ -626,6 +626,10 @@ position = Vector2(0.66666675, -35.666668)
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="Control" parent="CanvasLayer" instance=ExtResource("4_is3ju")]
+offset_left = 3.0
+offset_top = 3.0
+offset_right = 3.0
+offset_bottom = 3.0
 
 [connection signal="timeout" from="Ysortobject/Enemy/NavTimer" to="Ysortobject/Navigation2D" method="_on_nav_timer_timeout"]
 [connection signal="timeout" from="Ysortobject/Enemy/NavTimer" to="Ysortobject/Enemy" method="_on_nav_timer_timeout"]

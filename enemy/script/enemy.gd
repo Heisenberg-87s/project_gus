@@ -32,8 +32,13 @@ const LAYER_WALL: int = 1 << 0  # เปลี่ยนบิตหากเล�
 @export var sight_debug_color_clear: Color = Color(0, 1, 0, 0.18)
 @export var sight_debug_color_alert: Color = Color(1, 0, 0, 0.25)
 
+# Optional: allow specifying a NodePath in the inspector for the sight origin.
+# If a child Node2D named "SightOrigin" exists, it will be used automatically.
+@export var sight_origin_path: NodePath = NodePath("")
+@onready var sight_origin: Marker2D = get_node_or_null("SightOrigin") as Marker2D
+
 # การปรับแต่งพฤติกรรม COMBAT (เปลี่ยนจาก alert)
-@export var combat_pause_duration: float = 1.0
+@export var combat_pause_duration: float = 0.6
 @export var combat_search_duration: float = 10.0
 @export var combat_sight_multiplier: float = 1.5
 @export var combat_move_speed: float = 160.0
@@ -90,6 +95,10 @@ const _SCAN_DIRS: Array = [Vector2.RIGHT, Vector2.UP, Vector2.LEFT, Vector2.DOWN
 
 var _last_player_visible: bool = false
 
+# --- ใหม่: ตัวแปรสำหรับให้หันตามผู้เล่นขณะสตั้น ---
+var _stun_track_player: bool = false
+var _stun_track_node: Node = null
+
 signal player_spotted(player)
 signal player_lost()
 
@@ -114,6 +123,10 @@ func _get_agent_next_position_safe():
 
 func _ready() -> void:
 	_original_sight_distance = sight_distance
+	# try to resolve sight_origin from exported path if not found by name
+	if sight_origin == null and sight_origin_path != NodePath("") and has_node(sight_origin_path):
+		sight_origin = get_node_or_null(sight_origin_path) as Node2D
+
 	if sight_debug and _sight_polygon == null:
 		_sight_polygon = Polygon2D.new()
 		_sight_polygon.name = "SightCone"
@@ -163,6 +176,16 @@ func _physics_process(delta: float) -> void:
 
 	# ถ้าอยู่ในสถานะ stunned หรือ ถูก hit (is_hit) ให้หยุดทำงานชั่วคราว
 	if is_stunned or is_hit:
+		# ถ้าเป็นสตั้นและเปิดโหมดติดตามผู้เล่น ให้หันไปหาผู้เล่นทุกเฟรมจนกว่าผู้เล่นจะหลุดจากสายตา
+		if is_stunned and _stun_track_player:
+			var player_node := (_stun_track_node if is_instance_valid(_stun_track_node) else _get_player_node())
+			if player_node != null and _last_player_visible:
+				_set_facing_toward_point_continuous((player_node as Node2D).global_position)
+			else:
+				# ถ้าผู้เล่นไม่อยู่ในสายตาแล้ว ให้ยกเลิกการติดตาม
+				_stun_track_player = false
+				_stun_track_node = null
+
 		velocity = Vector2.ZERO
 		move_and_slide()
 		_update_animation()
@@ -379,20 +402,26 @@ func _update_animation() -> void:
 func _update_sight_visual_and_detection() -> void:
 	if not sight_debug and sight_rays <= 0:
 		return
+	# Use sight origin if provided (child Node2D "SightOrigin" or via sight_origin_path), otherwise use enemy center
+	var origin_global: Vector2 = global_position
+	if sight_origin != null and is_instance_valid(sight_origin):
+		origin_global = sight_origin.global_position
+
 	var forward = _last_facing
 	if forward.length() == 0:
 		forward = Vector2.DOWN
 	var pts: PackedVector2Array = PackedVector2Array()
-	pts.append(Vector2.ZERO)
+	# polygon first point should be the origin (in enemy-local coordinates)
+	pts.append(to_local(origin_global))
 	var half_fov = deg_to_rad(sight_fov_deg * 0.5)
 	var global_points: Array = []
 	for i in range(sight_rays + 1):
 		var t = float(i) / float(sight_rays)
 		var angle = lerp(-half_fov, half_fov, t)
 		var dir = forward.rotated(angle).normalized()
-		var target_global = global_position + dir * sight_distance
+		var target_global = origin_global + dir * sight_distance
 		var params := PhysicsRayQueryParameters2D.new()
-		params.from = global_position
+		params.from = origin_global
 		params.to = target_global
 		params.exclude = [self]
 		params.collision_mask = LAYER_WALL
@@ -406,13 +435,13 @@ func _update_sight_visual_and_detection() -> void:
 	var player_node := _get_player_node()
 	if player_node != null:
 		var player_pos: Vector2 = (player_node as Node2D).global_position
-		var v = player_pos - global_position
+		var v = player_pos - origin_global
 		var dist = v.length()
 		if dist <= sight_distance:
 			var angle_to_player = abs(forward.angle_to(v.normalized()))
 			if angle_to_player <= half_fov:
 				var params2 := PhysicsRayQueryParameters2D.new()
-				params2.from = global_position
+				params2.from = origin_global
 				params2.to = player_pos
 				params2.exclude = [self]
 				params2.collision_mask = LAYER_WALL
@@ -447,6 +476,9 @@ func _on_player_spotted(player: Node) -> void:
 			agent.set_target_position(_last_known_player_pos)
 	_set_facing_toward_point_continuous(_last_known_player_pos)
 	# เรียกสตั้น แต่เฉพาะเมื่อคูลดาว์นอนุญาต
+	# เริ่มติดตามผู้เล่นขณะสตั้น
+	_stun_track_player = true
+	_stun_track_node = player
 	stun(stun_duration)
 
 func _on_player_lost() -> void:
@@ -624,6 +656,9 @@ func stun(duration: float) -> void:
 
 func _end_stun() -> void:
 	is_stunned = false
+	# ยกเลิกการติดตามผู้เล่นเมื่อสตั้นจบ
+	_stun_track_player = false
+	_stun_track_node = null
 	_update_animation()
 	# ตั้งตัวจับเวลาคูลดาว์น (สุ่มระหว่างค่าน้อยสุด/มากสุด)
 	var cd = lerp(stun_cooldown_min, stun_cooldown_max, randf())

@@ -9,12 +9,20 @@ class_name SoundArea
 @export var duration: float = 0.25
 @export var radius: float = 300.0
 
+# Optional: AudioStream to play when this SoundArea is spawned.
+# Assign from Player when instancing, e.g.:
+#   var sa = SOUND_AREA_SCENE.instantiate()
+#   sa.sound_sfx = sound_emit_sfx
+@export var sound_sfx: AudioStream = null
+
 # The player node that created this sound (so enemies can move toward the correct player)
 var source_player: Node = null
 
 var _hit_ids := {}
 
 @onready var _colshape: CollisionShape2D = $CollisionShape2D
+# try to use an existing AudioStreamPlayer2D child if present
+@onready var _audio_player: AudioStreamPlayer2D = $AudioStreamPlayer2D if has_node("AudioStreamPlayer2D") else null
 
 func _ready() -> void:
 	# ensure circle shape with radius
@@ -27,6 +35,17 @@ func _ready() -> void:
 		var cs = CollisionShape2D.new()
 		cs.shape = circ
 		add_child(cs)
+
+	# ensure we have an AudioStreamPlayer2D as a child to play spatial sound
+	if _audio_player == null:
+		_audio_player = AudioStreamPlayer2D.new()
+		_audio_player.name = "AudioStreamPlayer2D"
+		add_child(_audio_player)
+
+	# if a stream was provided, play it (spatial, located at this Area2D)
+	if sound_sfx != null and _audio_player != null:
+		_audio_player.stream = sound_sfx
+		_audio_player.play()
 
 	add_to_group("player_sound")
 	connect("area_entered", Callable(self, "_on_area_entered"))
