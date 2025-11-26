@@ -1,0 +1,26 @@
+[gd_scene load_steps=4 format=3 uid="uid://drk7gsf7pmo81"]
+
+[ext_resource type="Script" uid="uid://dultfih7fxw6c" path="res://player/script/player_hurtbox.gd" id="1_15axk"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_15axk"]
+radius = 5.0
+height = 32.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_awdw8"]
+radius = 5.0
+height = 20.0
+
+[node name="Area2D" type="Area2D"]
+script = ExtResource("1_15axk")
+
+[node name="CS_NORMAL" type="CollisionShape2D" parent="."]
+position = Vector2(0, -16)
+shape = SubResource("CapsuleShape2D_15axk")
+debug_color = Color(0.9979996, 0, 0.1636788, 0.41960785)
+
+[node name="CS_SNEAK" type="CollisionShape2D" parent="."]
+position = Vector2(0, -10)
+shape = SubResource("CapsuleShape2D_awdw8")
+debug_color = Color(0.7008303, 0.49215102, 0, 0.41960785)
+
+[node name="CS_CRAWL" type="CollisionShape2D" parent="."]

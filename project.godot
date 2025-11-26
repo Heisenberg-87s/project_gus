@@ -101,6 +101,8 @@ sound_detect={
 2d_physics/layer_3="hurtboxes"
 2d_physics/layer_4="Player_melee"
 2d_physics/layer_5="enemies"
+2d_physics/layer_6="sound_area"
+2d_physics/layer_7="player_hurtbox"
 
 [rendering]
 

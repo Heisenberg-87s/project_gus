@@ -25,6 +25,7 @@ var _search_scan_dir_timer: float = 0.45
 # -----------------------
 const LAYER_WALL: int = 1 << 0  # เปลี่ยนบิตหากเลเยอร์ผนังต่างออกไป
 
+
 @export var sight_distance: float = 220.0
 @export var sight_fov_deg: float = 90.0
 @export var sight_rays: int = 36

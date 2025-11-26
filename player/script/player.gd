@@ -30,10 +30,16 @@ var _active_muzzle: Marker2D = null
 @onready var _punch_point_left: Node2D = get_node_or_null("PunchPoint_left") as Node2D
 @onready var _punch_point_right: Node2D = get_node_or_null("PunchPoint_right") as Node2D
 
+# ===== Hurtbox node (ต้องเป็นลูกของ Player ตรงชื่อ "Hurtbox") =====
+@onready var hurtbox_area: Area2D = get_node_or_null("Hurtbox") as Area2D
+# ใน Hurtbox ควรมีลูกเป็น CollisionShape2D 3 ตัว ชื่อ:
+# "CS_NORMAL", "CS_SNEAK", "CS_CRAWL"
+
 # ==== SOUND AREA ====
 const SOUND_AREA_SCENE = preload("res://player/sound_area.tscn")
 @export var sound_detect_radius: float = 300.0
 @export var sound_detect_duration: float = 0.25
+@export var sound_emit_sfx: AudioStream = preload("res://assets/audio/knock1.ogg")
 
 # -- Sound emit cooldown (prevents spamming the sound area) --
 @export var sound_emit_cooldown_time: float = 1.2
@@ -77,12 +83,36 @@ var _current_anim: String = ""
 var _crouch_pending_stand: bool = false
 var _crouch_delay_timer: float = 0.0
 
+# ===== HEALTH / DAMAGE =====
+@export var max_health: int = 100
+var health: int = 100
+@export var invuln_time: float = 0.5
+var _invuln_timer: float = 0.0
+
+# ===== VISUAL DAMAGE FEEDBACK (ตัวอย่าง) =====
+@export var flash_color: Color = Color(1,0.5,0.5)
+var _orig_modulate: Color = Color(1,1,1,1)
+
 func _ready() -> void:
 	add_to_group("player")
 	_select_muzzle_for_cardinal(cardinal_direction)
 	if animated_sprite:
 		animated_sprite.connect("animation_finished", Callable(self, "_on_animation_finished"))
+	# init health
+	health = max_health
+	# store original modulate for flash
+	if animated_sprite:
+		_orig_modulate = animated_sprite.modulate
+	# connect hurtbox signals (if hurtbox present)
+	if hurtbox_area != null:
+		# ใช้ Callable แบบ Godot 4 ใน is_connected
+		if not hurtbox_area.is_connected("area_entered", Callable(self, "_on_hurtbox_area_entered")):
+			hurtbox_area.connect("area_entered", Callable(self, "_on_hurtbox_area_entered"))
+		if not hurtbox_area.is_connected("body_entered", Callable(self, "_on_hurtbox_body_entered")):
+			hurtbox_area.connect("body_entered", Callable(self, "_on_hurtbox_body_entered"))
+	# initial animation/hurtbox setup
 	_update_animation(true)
+	_update_hurtbox_shape(true)
 
 func _process(delta: float) -> void:
 	# ---- Visual Y offset for sneak/crawl ----
@@ -90,6 +120,8 @@ func _process(delta: float) -> void:
 	var t: float = clamp(delta * offset_lerp_speed, 0.0, 1.0)
 	_current_offset_y = lerp(_current_offset_y, desired_offset, t)
 	animated_sprite.position = _base_sprite_pos + Vector2(0.0, _current_offset_y)
+	# update hurtbox position to follow sprite offset
+	_update_hurtbox_position()
 
 	# ---- Timers ----
 	_gun_cooldown = max(_gun_cooldown - delta, 0.0) if _gun_cooldown > 0.0 else 0.0
@@ -103,6 +135,14 @@ func _process(delta: float) -> void:
 		if _temp_anim_timer <= 0.0:
 			_temp_anim_name = ""
 			_update_animation(true)
+
+	# decrement invuln timer
+	if _invuln_timer > 0.0:
+		_invuln_timer = max(_invuln_timer - delta, 0.0)
+		if _invuln_timer <= 0.0:
+			# restore visual
+			if animated_sprite:
+				animated_sprite.modulate = _orig_modulate
 
 	# ---- Crouch/stand delay handling (new) ----
 	# If currently in SNEAK or CRAWL and player released the key, start pending stand timer.
@@ -135,6 +175,7 @@ func _process(delta: float) -> void:
 			if _set_state(true):
 				_select_muzzle_for_cardinal(cardinal_direction)
 				_update_animation(true)
+				_update_hurtbox_shape(true)
 
 	# ---- Update input ----
 	direction.x = Input.get_action_strength("right") - Input.get_action_strength("left")
@@ -149,6 +190,7 @@ func _process(delta: float) -> void:
 			_try_shoot()
 		elif _punch_cooldown_timer <= 0.0 and state != State.PUNCH:
 			_start_punch()
+			
 	if Input.is_action_just_pressed("sound_detect"):
 		# check emit cooldown before creating a sound area
 		if _sound_emit_cooldown_timer <= 0.0:
@@ -157,14 +199,9 @@ func _process(delta: float) -> void:
 			sa.radius = sound_detect_radius
 			sa.duration = sound_detect_duration
 			sa.source_player = self
-			# ปรับ collision mask/layer ถ้าจำเป็น:
-			# sa.collision_layer = 1
-			# sa.collision_mask = 2  # ตรวจหาชั้นที่ Hurtbox ของศัตรูอยู่
 			get_tree().current_scene.add_child(sa)
 			_sound_emit_cooldown_timer = sound_emit_cooldown_time
 		else:
-			# ถ้าต้องการ feedback ตอน cooldown ยังไม่หมด ให้ใส่ที่นี่ (เสียง/UI)
-			# ตัวอย่าง: print("Sound on cooldown:", _sound_emit_cooldown_timer)
 			pass
 
 	# ---- State updates ----
@@ -173,6 +210,7 @@ func _process(delta: float) -> void:
 		if _set_state():
 			_select_muzzle_for_cardinal(cardinal_direction)
 			_update_animation(true)
+			_update_hurtbox_shape(true)
 
 	# ---- End punch ----
 	if state == State.PUNCH and not _punch_auto_end_by_anim and _punch_timer <= 0.0:
@@ -295,6 +333,12 @@ func _do_punch_hit() -> void:
 	pa.radius = radius
 	pa.duration = clamp(punch_duration * 0.9, 0.06, punch_duration + 0.05)
 	pa.stun_duration = 10.0
+	# pa อาจมี export var damage (ตัวอย่าง)
+	if pa.has_method("set") and pa.has_method("get"):
+		# ถ้ามี property damage อยู่ ให้ตั้งเป็น 10
+		var v = pa.get("damage") if pa.has_method("get") else null
+		if v != null:
+			pa.set("damage", 10)
 	get_tree().current_scene.add_child(pa)
 
 func _try_shoot() -> void:
@@ -417,3 +461,102 @@ func _get_speed_for_state() -> float:
 		State.IDLE: return 0.0
 		_:
 			return MAX_SPEED
+
+# ========== HURT / DAMAGE HANDLING ==========
+
+func _on_hurtbox_area_entered(area: Area2D) -> void:
+	# ถ้าต่อสัญญาณจาก Hurtbox เข้ามา (ทางเลือก) ให้เรียก take_damage
+	if not is_instance_valid(area):
+		return
+	var dmg = 0
+	if area.has_method("get_damage_amount"):
+		dmg = int(area.get_damage_amount())
+	elif area.has_meta("damage"):
+		dmg = int(area.get_meta("damage"))
+	else:
+		var v = area.get("damage")
+		if v != null:
+			dmg = int(v)
+	if dmg > 0:
+		var src = null
+		if area.has_meta("source"):
+			src = area.get_meta("source")
+		else:
+			var sv = area.get("source")
+			if sv != null:
+				src = sv
+		take_damage(dmg, src)
+
+func _on_hurtbox_body_entered(body: Node) -> void:
+	if not is_instance_valid(body):
+		return
+	var dmg = 0
+	if body.has_method("get_damage_amount"):
+		dmg = int(body.get_damage_amount())
+	elif body.has_meta("damage"):
+		dmg = int(body.get_meta("damage"))
+	else:
+		var v = body.get("damage")
+		if v != null:
+			dmg = int(v)
+	if dmg > 0:
+		var src = null
+		if body.has_meta("source"):
+			src = body.get_meta("source")
+		else:
+			var sv = body.get("source")
+			if sv != null:
+				src = sv
+		take_damage(dmg, src)
+
+func take_damage(amount: int, source: Node = null) -> void:
+	# invuln short-circuit
+	if _invuln_timer > 0.0:
+		return
+	# apply damage
+	health = max(health - amount, 0)
+	# set invulnerability
+	_invuln_timer = invuln_time
+	# visual feedback (simple flash)
+	if animated_sprite:
+		animated_sprite.modulate = flash_color
+	# TODO: spawn hit effect, play sound, apply knockback from source if needed
+	# die?
+	if health <= 0:
+		_die()
+
+func _die() -> void:
+	# ตัวอย่างเบื้องต้น: ปิดการควบคุม, เล่นอนิเมชัน, รีโหลด หรือส่งสัญญาณ
+	if animated_sprite:
+		animated_sprite.stop()
+	print("Player died")
+	get_tree().reload_current_scene()
+
+# ========== HURTBOX SHAPE SWITCHING ==========
+
+func _update_hurtbox_shape(force: bool=false) -> void:
+	# เปิด shape ให้ตรงกับ state (CS_NORMAL, CS_SNEAK, CS_CRAWL)
+	if hurtbox_area == null:
+		return
+	var cs_normal = hurtbox_area.get_node_or_null("CS_NORMAL") as CollisionShape2D
+	var cs_sneak = hurtbox_area.get_node_or_null("CS_SNEAK") as CollisionShape2D
+	var cs_crawl = hurtbox_area.get_node_or_null("CS_CRAWL") as CollisionShape2D
+	# ปิด/เปิดตาม state
+	if cs_normal:
+		cs_normal.disabled = not (state == State.IDLE or state == State.WALK or state == State.RUN)
+	if cs_sneak:
+		cs_sneak.disabled = not (state == State.SNEAK)
+	if cs_crawl:
+		cs_crawl.disabled = not (state == State.CRAWL)
+	# ถ้าต้องการ เปลี่ยนตำแหน่งหรือขนาดเพิ่มเติม ให้ปรับที่นี่
+	_update_hurtbox_position()
+
+func _update_hurtbox_position() -> void:
+	# ให้ Hurtbox ย้ายตาม sprite offset (y) และคำนึงการ flip x ถ้าจำเป็น
+	if hurtbox_area == null:
+		return
+	var pos = Vector2.ZERO
+	pos.y = _current_offset_y
+	hurtbox_area.position = pos
+	# สำหรับ flip แนวนอน: ถ้าคุณมี shape ที่ offset ทาง x ให้ตรวจเช็ค scale.x
+	# (ถ้าจำเป็น สามารถ loop ผ่าน children ของ hurtbox และ multiply x offset ด้วย sign of animated_sprite.scale.x)

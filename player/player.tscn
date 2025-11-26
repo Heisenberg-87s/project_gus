@@ -1,7 +1,9 @@
-[gd_scene load_steps=60 format=3 uid="uid://2jfjcm6ebujw"]
+[gd_scene load_steps=65 format=3 uid="uid://2jfjcm6ebujw"]
 
 [ext_resource type="Script" uid="uid://10csggpybcp3" path="res://player/script/player.gd" id="1_mm0hj"]
 [ext_resource type="Texture2D" uid="uid://dbsymxp7dmixw" path="res://player/sprites/Solid Snake.png" id="2_qjkh3"]
+[ext_resource type="Script" uid="uid://dultfih7fxw6c" path="res://player/script/player_hurtbox.gd" id="3_g1dw6"]
+[ext_resource type="AudioStream" uid="uid://cp8s4ijkcmn5y" path="res://assets/audio/knock.mp3" id="3_yw30f"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_rkbax"]
 
@@ -792,6 +794,18 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_rkbax"]
+radius = 5.0
+height = 32.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_g1dw6"]
+radius = 5.0
+height = 19.333334
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_yw30f"]
+radius = 5.0
+height = 10.0
+
 [node name="Player" type="CharacterBody2D" groups=["player"]]
 y_sort_enabled = true
 scale = Vector2(3, 3)
@@ -809,10 +823,11 @@ shape = SubResource("CircleShape2D_rkbax")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 y_sort_enabled = true
 sprite_frames = SubResource("SpriteFrames_2fgmn")
-animation = &"gun_idle_side"
+animation = &"crawl_idle_side"
 offset = Vector2(0, -16.14)
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("3_yw30f")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 zoom = Vector2(1.265, 1.265)
@@ -820,6 +835,26 @@ drag_horizontal_enabled = true
 drag_vertical_enabled = true
 editor_draw_limits = true
 editor_draw_drag_margin = true
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 64
+collision_mask = 4
+script = ExtResource("3_g1dw6")
+
+[node name="CS_NORMAL" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, -16)
+shape = SubResource("CapsuleShape2D_rkbax")
+debug_color = Color(0.9979996, 0, 0.1636788, 0.41960785)
+
+[node name="CS_SNEAK" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, -15)
+shape = SubResource("CapsuleShape2D_g1dw6")
+debug_color = Color(0.6640297, 0.51294875, 1.92523e-07, 0.41960785)
+
+[node name="CS_CRAWL" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, -14)
+shape = SubResource("CapsuleShape2D_yw30f")
+debug_color = Color(0.105882354, 0.7019608, 0.28235295, 0.41960785)
 
 [node name="Muzzle" type="Marker2D" parent="."]
 visible = false

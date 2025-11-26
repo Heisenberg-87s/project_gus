@@ -1,12 +1,13 @@
-[gd_scene load_steps=2 format=3 uid="uid://bub02tqpyqhjk"]
+[gd_scene load_steps=3 format=3 uid="uid://bub02tqpyqhjk"]
 
 [ext_resource type="Script" uid="uid://dvqbenni6ogqw" path="res://player/script/sound_area.gd" id="1_1ricc"]
+[ext_resource type="AudioStream" uid="uid://dgx50ejysfag4" path="res://assets/audio/knock1.ogg" id="2_dwaw5"]
 
 [node name="SoundArea" type="Area2D"]
-visible = false
 collision_layer = 32
 collision_mask = 4
 script = ExtResource("1_1ricc")
+sound_sfx = ExtResource("2_dwaw5")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 debug_color = Color(0.6312446, 0.5295586, 0, 0.41960785)
