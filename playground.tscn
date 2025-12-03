@@ -1,14 +1,17 @@
-[gd_scene load_steps=8 format=4 uid="uid://c4p3qjwyk0h3h"]
+[gd_scene load_steps=10 format=4 uid="uid://c4p3qjwyk0h3h"]
 
 [ext_resource type="Texture2D" uid="uid://bcwwxc1y27goe" path="res://assets/spritesheet_tiles.png" id="1_m8u5f"]
 [ext_resource type="PackedScene" uid="uid://2jfjcm6ebujw" path="res://player/player.tscn" id="1_rupst"]
 [ext_resource type="PackedScene" uid="uid://v1cx2pek8gbo" path="res://enemy/enemy.tscn" id="3_m8u5f"]
 [ext_resource type="PackedScene" uid="uid://cd1fmymmeibu0" path="res://reloadui.tscn" id="4_is3ju"]
+[ext_resource type="PackedScene" uid="uid://kml0362lhw4h" path="res://health_bar.tscn" id="5_o00ia"]
+[ext_resource type="PackedScene" uid="uid://cydk53nqabmss" path="res://ui/game_over_panel.tscn" id="6_4bqqs"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_m8u5f"]
-vertices = PackedVector2Array(906, 522, 1273, 702.9219, 12.921875, 693.0703, 438, 522, 1273, 8.0078125, 906, 438, 8.0703125, 9.9765625, 438, 182, 522, 182, 522, 438)
+vertices = PackedVector2Array(916, 532, 1263, 692.84375, 22.851563, 683.14844, 428, 532, 1263, 18.03125, 916, 428, 18.140625, 19.960938, 428, 172, 532, 172, 532, 428)
 polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(4, 1, 0, 5), PackedInt32Array(3, 2, 6, 7), PackedInt32Array(7, 6, 4, 8), PackedInt32Array(8, 4, 5, 9)])
 outlines = Array[PackedVector2Array]([PackedVector2Array(3, 703, 1283, 713, 1283, -2, -2, 0)])
+agent_radius = 20.0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_m8u5f"]
 texture = ExtResource("1_m8u5f")
@@ -623,13 +626,18 @@ autostart = true
 [node name="p2" type="Marker2D" parent="Ysortobject/Enemy2/PatrolPoints"]
 position = Vector2(0.66666675, -35.666668)
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="UI" type="CanvasLayer" parent="."]
 
-[node name="Control" parent="CanvasLayer" instance=ExtResource("4_is3ju")]
+[node name="Control" parent="UI" instance=ExtResource("4_is3ju")]
 offset_left = 3.0
 offset_top = 3.0
 offset_right = 3.0
 offset_bottom = 3.0
+
+[node name="Health_bar" parent="UI" instance=ExtResource("5_o00ia")]
+
+[node name="GameOverUI" parent="UI" instance=ExtResource("6_4bqqs")]
+visible = false
 
 [connection signal="timeout" from="Ysortobject/Enemy/NavTimer" to="Ysortobject/Navigation2D" method="_on_nav_timer_timeout"]
 [connection signal="timeout" from="Ysortobject/Enemy/NavTimer" to="Ysortobject/Enemy" method="_on_nav_timer_timeout"]

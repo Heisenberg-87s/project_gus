@@ -43,14 +43,16 @@ animations = [{
 radius = 4.0
 
 [node name="enemy_bullet" type="Area2D"]
+collision_layer = 256
+collision_mask = 64
 script = ExtResource("1_hak2i")
 
-[node name="AnimatedSprite2D2" type="AnimatedSprite2D" parent="."]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 scale = Vector2(1.77, 1.77)
 sprite_frames = SubResource("SpriteFrames_hak2i")
 animation = &"bullet"
 frame = 3
 frame_progress = 1.0
 
-[node name="CollisionShape2D2" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_l37un")

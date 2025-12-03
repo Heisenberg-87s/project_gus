@@ -1,7 +1,7 @@
 extends Area2D
 
 @export var source_player: Node = null         # ถ้าตั้งมาแล้ว จะใช้ในการอ้างอิงผู้เล่น (preferred)
-@export var hurtbox_layer: int = 1 << 1        # ค่าเริ่มต้น: layer index 2 (ตรงกับ Enemy skript ตัวอย่าง)
+@export var hurtbox_layer: int = 1 << 6        # ค่าเริ่มต้น: layer index 7 (1<<6)
 @export var add_group_name: String = "player_hurtbox"
 @export var auto_name_hurtbox: bool = true
 @export var debug: bool = false
@@ -97,3 +97,7 @@ func get_source_player() -> Node:
 
 func set_source_player(p: Node) -> void:
 	source_player = p
+
+# helper to expose layer value for other scripts
+func get_hurtbox_layer() -> int:
+	return hurtbox_layer

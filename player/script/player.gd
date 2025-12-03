@@ -35,6 +35,10 @@ var _active_muzzle: Marker2D = null
 # ใน Hurtbox ควรมีลูกเป็น CollisionShape2D 3 ตัว ชื่อ:
 # "CS_NORMAL", "CS_SNEAK", "CS_CRAWL"
 
+# ===== Player's main body collision (optional) =====
+# ถ้าต้นฉบับ node ชื่อ CollisionShape2D อยู่ในตัว player จะถูกใช้เป็น collision หลัก
+@onready var body_collision: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
+
 # ==== SOUND AREA ====
 const SOUND_AREA_SCENE = preload("res://player/sound_area.tscn")
 @export var sound_detect_radius: float = 300.0
@@ -86,12 +90,26 @@ var _crouch_delay_timer: float = 0.0
 # ===== HEALTH / DAMAGE =====
 @export var max_health: int = 100
 var health: int = 100
-@export var invuln_time: float = 0.5
+@export var invuln_time: float = 3.0
 var _invuln_timer: float = 0.0
 
+signal died
+
 # ===== VISUAL DAMAGE FEEDBACK (ตัวอย่าง) =====
-@export var flash_color: Color = Color(1,0.5,0.5)
+@export var flash_color: Color = Color(1.0, 0.502, 0.502, 0.0)
 var _orig_modulate: Color = Color(1,1,1,1)
+
+# ===== BLINK (invulnerability visual) =====
+@export var blink_interval: float = 0.08
+var _blink_accum: float = 0.0
+var _blink_on: bool = false
+
+# ===== Collision scale settings (ใหม่) =====
+@export var crawl_collision_scale: float = 0.7   # scale applied while crawling
+@export var sneak_collision_scale: float = 0.9   # scale applied while sneaking
+# keep originals to avoid cumulative scaling
+var _body_shape_original: Dictionary = {}
+var _hurtbox_shapes_original: Dictionary = {}
 
 func _ready() -> void:
 	add_to_group("player")
@@ -111,8 +129,50 @@ func _ready() -> void:
 		if not hurtbox_area.is_connected("body_entered", Callable(self, "_on_hurtbox_body_entered")):
 			hurtbox_area.connect("body_entered", Callable(self, "_on_hurtbox_body_entered"))
 	# initial animation/hurtbox setup
+	_capture_original_shapes()
 	_update_animation(true)
 	_update_hurtbox_shape(true)
+
+func _capture_original_shapes() -> void:
+	# capture main body collision shape original params if available
+	if body_collision != null and body_collision.shape != null:
+		_body_shape_original = _capture_shape_original(body_collision.shape)
+	# capture hurtbox children's shapes originals
+	if hurtbox_area != null:
+		for name in ["CS_NORMAL", "CS_SNEAK", "CS_CRAWL"]:
+			var cs = hurtbox_area.get_node_or_null(name) as CollisionShape2D
+			if cs != null and cs.shape != null:
+				_hurtbox_shapes_original[name] = _capture_shape_original(cs.shape)
+
+func _capture_shape_original(s: Shape2D) -> Dictionary:
+	# store a lightweight copy of important properties so we can scale from original later
+	if s is RectangleShape2D:
+		return {"type":"rect", "extents": (s as RectangleShape2D).extents}
+	elif s is CircleShape2D:
+		return {"type":"circle", "radius": (s as CircleShape2D).radius}
+	elif s is CapsuleShape2D:
+		return {"type":"capsule", "height": (s as CapsuleShape2D).height, "radius": (s as CapsuleShape2D).radius}
+	else:
+		# fallback: store a shallow reference - we will not scale unknown shapes
+		return {"type":"unknown"}
+
+func _apply_scaled_to_shape(s: Shape2D, original: Dictionary, scale: float) -> void:
+	if original == null:
+		return
+	match original.get("type", ""):
+		"rect":
+			if s is RectangleShape2D:
+				(s as RectangleShape2D).extents = original["extents"] * scale
+		"circle":
+			if s is CircleShape2D:
+				(s as CircleShape2D).radius = original["radius"] * scale
+		"capsule":
+			if s is CapsuleShape2D:
+				(s as CapsuleShape2D).height = original["height"] * scale
+				(s as CapsuleShape2D).radius = original["radius"] * scale
+		_:
+			# unknown shape: do nothing
+			pass
 
 func _process(delta: float) -> void:
 	# ---- Visual Y offset for sneak/crawl ----
@@ -136,13 +196,22 @@ func _process(delta: float) -> void:
 			_temp_anim_name = ""
 			_update_animation(true)
 
-	# decrement invuln timer
+	# decrement invuln timer and handle blinking
 	if _invuln_timer > 0.0:
 		_invuln_timer = max(_invuln_timer - delta, 0.0)
+		# blinking logic while invulnerable
+		_blink_accum += delta
+		if _blink_accum >= blink_interval:
+			_blink_accum = 0.0
+			_blink_on = not _blink_on
+			if animated_sprite:
+				animated_sprite.modulate = (flash_color if _blink_on else _orig_modulate)
 		if _invuln_timer <= 0.0:
-			# restore visual
+			# ensure restored
 			if animated_sprite:
 				animated_sprite.modulate = _orig_modulate
+			_blink_accum = 0.0
+			_blink_on = false
 
 	# ---- Crouch/stand delay handling (new) ----
 	# If currently in SNEAK or CRAWL and player released the key, start pending stand timer.
@@ -510,27 +579,66 @@ func _on_hurtbox_body_entered(body: Node) -> void:
 		take_damage(dmg, src)
 
 func take_damage(amount: int, source: Node = null) -> void:
-	# invuln short-circuit
+	# ถ้าอยู่ในช่วงอมตะ ให้ข้าม
 	if _invuln_timer > 0.0:
 		return
-	# apply damage
+
+	# Apply damage
 	health = max(health - amount, 0)
-	# set invulnerability
+
+	# เริ่มตัวจับเวลาอมตะและ visual blink
 	_invuln_timer = invuln_time
-	# visual feedback (simple flash)
 	if animated_sprite:
+		_blink_accum = 0.0
+		_blink_on = true
 		animated_sprite.modulate = flash_color
-	# TODO: spawn hit effect, play sound, apply knockback from source if needed
-	# die?
+
+	# (Optional) เล่นเสียงโดน ถ้าคุณมี node ชื่อ "HurtSound"
+	if has_node("HurtSound"):
+		var hs = get_node("HurtSound")
+		if hs != null and hs.has_method("play"):
+			hs.play()
+
+	# ถ้า HP ถึง 0 -> ตาย
 	if health <= 0:
 		_die()
 
 func _die() -> void:
-	# ตัวอย่างเบื้องต้น: ปิดการควบคุม, เล่นอนิเมชัน, รีโหลด หรือส่งสัญญาณ
-	if animated_sprite:
-		animated_sprite.stop()
-	print("Player died")
-	get_tree().reload_current_scene()
+	# หยุดการประมวลผลของ player (ป้องกัน input/physics ต่อ)
+	set_process(false)
+	set_physics_process(false)
+
+	# หยุดการเคลื่อนที่ทันที
+	if "velocity" in self:
+		velocity = Vector2.ZERO
+
+	# เล่นเสียงตาย ถ้ามี node ชื่อ "DeathSound" (AudioStreamPlayer / AudioStreamPlayer2D)
+	if has_node("DeathSound"):
+		var ds = get_node("DeathSound")
+		if ds != null and ds.has_method("play"):
+			ds.play()
+
+	# เล่นอนิเมชันตายถ้ามี (เช็คชื่อยอดนิยม)
+	if animated_sprite != null and animated_sprite.sprite_frames != null:
+		var death_candidates: Array = ["death", "die", "dead"]
+		for a in death_candidates:
+			if animated_sprite.sprite_frames.has_animation(a):
+				animated_sprite.animation = a
+				animated_sprite.play()
+				break
+				
+				
+
+	# ปิดการชน/ตรวจจับเพิ่มเติม เพื่อไม่ให้ถูกกระทบซ้ำ
+	if body_collision != null:
+		body_collision.disabled = true
+	if hurtbox_area != null:
+		# ปิด monitoring ทันที และกำหนดแบบ deferred เผื่ออยู่ใน callback ของ physics
+		hurtbox_area.monitoring = false
+		hurtbox_area.set_deferred("monitoring", false)
+
+	# ส่งสัญญาณว่าตาย — DeathUI ควรฟังสัญญาณนี้แล้วเริ่ม sequence fade / video / restart
+	emit_signal("died")
 
 # ========== HURTBOX SHAPE SWITCHING ==========
 
@@ -548,6 +656,32 @@ func _update_hurtbox_shape(force: bool=false) -> void:
 		cs_sneak.disabled = not (state == State.SNEAK)
 	if cs_crawl:
 		cs_crawl.disabled = not (state == State.CRAWL)
+
+	# ถ้าต้องการ ลด/เพิ่มขนาด collision ของ body หรือ hurtbox ให้ใช้ค่า scale ที่ตั้งได้
+	var scale: float = 1.0
+	if state == State.CRAWL:
+		scale = clamp(crawl_collision_scale, 0.01, 2.0)
+	elif state == State.SNEAK:
+		scale = clamp(sneak_collision_scale, 0.01, 2.0)
+	else:
+		scale = 1.0
+
+	# Apply scale to main body collision (ถ้ามี)
+	if body_collision != null and body_collision.shape != null and _body_shape_original != null:
+		_apply_scaled_to_shape(body_collision.shape, _body_shape_original, scale)
+
+	# Optionally apply scale to the active hurtbox shape(s) so damage area also shrinks
+	# We only scale shapes that we captured originally to avoid unexpected mutation
+	for name in _hurtbox_shapes_original.keys():
+		var cs = hurtbox_area.get_node_or_null(name) as CollisionShape2D
+		if cs != null and cs.shape != null:
+			# scale only when the shape is enabled (active) so inactive shapes keep original sizes
+			if not cs.disabled:
+				_apply_scaled_to_shape(cs.shape, _hurtbox_shapes_original[name], scale)
+			else:
+				# restore original if disabled (prevents leftover scaled values)
+				_apply_scaled_to_shape(cs.shape, _hurtbox_shapes_original[name], 1.0)
+
 	# ถ้าต้องการ เปลี่ยนตำแหน่งหรือขนาดเพิ่มเติม ให้ปรับที่นี่
 	_update_hurtbox_position()
 
@@ -560,3 +694,7 @@ func _update_hurtbox_position() -> void:
 	hurtbox_area.position = pos
 	# สำหรับ flip แนวนอน: ถ้าคุณมี shape ที่ offset ทาง x ให้ตรวจเช็ค scale.x
 	# (ถ้าจำเป็น สามารถ loop ผ่าน children ของ hurtbox และ multiply x offset ด้วย sign of animated_sprite.scale.x)
+
+
+func _on_nav_timer_timeout() -> void:
+	pass # Replace with function body.

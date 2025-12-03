@@ -24,10 +24,11 @@ var _search_scan_dir_timer: float = 0.45
 # การตั้งค่าการมอง/การตรวจจับ
 # -----------------------
 const LAYER_WALL: int = 1 << 0  # เปลี่ยนบิตหากเลเยอร์ผนังต่างออกไป
+const LAYER_VENT: int = 128 << 7
 
 
-@export var sight_distance: float = 220.0
-@export var sight_fov_deg: float = 90.0
+@export var sight_distance: float = 300.0
+@export var sight_fov_deg: float = 120.0
 @export var sight_rays: int = 36
 @export var sight_debug: bool = true
 @export var sight_debug_color_clear: Color = Color(0, 1, 0, 0.18)
@@ -38,11 +39,27 @@ const LAYER_WALL: int = 1 << 0  # เปลี่ยนบิตหากเล�
 @export var sight_origin_path: NodePath = NodePath("")
 @onready var sight_origin: Marker2D = get_node_or_null("SightOrigin") as Marker2D
 
+# Muzzle (ใหม่) - กำหนดตำแหน่งปากกระบอกปืนเป็น Marker2D
+@export var muzzle_path: NodePath = NodePath("")   # ถ้าตั้ง path ไว้ จะใช้ node นั้นเป็น muzzle
+var muzzle: Marker2D = null                        # ถูก resolved ใน _ready()
+
 # การปรับแต่งพฤติกรรม COMBAT (เปลี่ยนจาก alert)
 @export var combat_pause_duration: float = 0.6
 @export var combat_search_duration: float = 10.0
 @export var combat_sight_multiplier: float = 1.5
 @export var combat_move_speed: float = 160.0
+
+# -------- Stealth interaction (ใหม่) ----------
+# เมื่อผู้เล่นอยู่ในสถานะ SNEAK หรือ CRAWL ให้ลดระยะการมองของศัตรูลง
+@export var stealth_sneak_multiplier: float = 0.6
+@export var stealth_crawl_multiplier: float = 0.3
+# ถ้าเปิด จะลด polygon ที่แสดง (debug) ตาม stealth ด้วย มิฉะนั้น polygon แสดง sight_distance ปกติ
+@export var apply_stealth_to_sight_visual: bool = true
+
+# หมายเหตุ: player.gd กำหนด enum State ดังนี้: IDLE=0, WALK=1, RUN=2, SNEAK=3, CRAWL=4, PUNCH=5
+const PLAYER_STATE_SNEAK: int = 3
+const PLAYER_STATE_CRAWL: int = 4
+# ----------------------------------------------
 
 # สแกน (มองรอบๆ) ขณะหยุด/ค้นหา 
 @export var combat_scan: bool = true
@@ -56,11 +73,20 @@ var _stun_cooldown_timer: float = 0.0
 var _can_stun: bool = true
 
 # -----------------------
-# เพิ่มการตอบสนองเสียง: หยุดชั่วคราว (stun-like), หันหน้าไปยังแหล่งกำเนิด แล้วค่อยเดินไปตรวจสอบ
+# เพิ่มการตอบสนองเสียง: หยุดชั่วคราว (stun-like), หันหน้าไปยังแหล่งกำเนิด แล้วค [...]
 # -----------------------
 @export var sound_reaction_pause: float = 0.35   # เวลาหยุดชั่วคราวเมื่อได้ยินเสียง (วินาที)
 var _sound_reaction_timer: float = 0.0
 var _sound_reaction_waiting: bool = false
+
+# ---------- การยิง (ใหม่) ----------
+# ถ้าใส่ projectile_scene จะ instance projectile เมื่อยิง
+@export var attack_cooldown: float = 0.1   # วินาทีระหว่างการยิง
+@export var projectile_scene: PackedScene
+@export var muzzle_offset: Vector2 = Vector2.ZERO
+@export var projectile_speed: float = 1000.0
+var _attack_timer: float = 0.0
+signal shoot_at(target_pos)
 
 # -----------------------
 # สถานะรันไทม์ / AI
@@ -128,6 +154,12 @@ func _ready() -> void:
 	if sight_origin == null and sight_origin_path != NodePath("") and has_node(sight_origin_path):
 		sight_origin = get_node_or_null(sight_origin_path) as Node2D
 
+	# Resolve muzzle: ถ้ามี child ชื่อ "Muzzle" ใช้เลย ถ้าไม่มีก็ลองใช้ muzzle_path
+	if has_node("Muzzle"):
+		muzzle = get_node_or_null("Muzzle") as Marker2D
+	elif muzzle_path != NodePath("") and has_node(muzzle_path):
+		muzzle = get_node_or_null(muzzle_path) as Marker2D
+
 	if sight_debug and _sight_polygon == null:
 		_sight_polygon = Polygon2D.new()
 		_sight_polygon.name = "SightCone"
@@ -158,7 +190,7 @@ func _physics_process(delta: float) -> void:
 
 	_update_sight_visual_and_detection()
 
-	# หากกำลังรอการตอบสนองจากเสียง (face -> pause) ให้นับถอยหลัง และยังไม่ให้ AI หลุดไปทำอย่างอื่น
+	# หากกำลังรอการตอบสนองจากเสียง (face -> pause) ให้นับถอยหลัง และยังไม่ให้ AI หลุดไ [...]
 	if _sound_reaction_waiting:
 		_sound_reaction_timer = max(_sound_reaction_timer - delta, 0.0)
 		velocity = Vector2.ZERO
@@ -167,7 +199,7 @@ func _physics_process(delta: float) -> void:
 		_update_animation()
 		if _sound_reaction_timer <= 0.0:
 			_sound_reaction_waiting = false
-			# หลังจากรอเสร็จ ให้สั่ง agent ให้ตั้งเป้าตำแหน่งเสียง (ถ้ามี) เพื่อเริ่มเดิน
+			# หลังจากรอเสร็จ ให้สั่ง agent ให้ตั้งเป้าตำแหน่งเสียง (ถ้ามี) เพื่อเริ่มเด[...]
 			if agent:
 				if agent.has_method("set_target_position"):
 					agent.set_target_position(_last_known_player_pos)
@@ -177,7 +209,7 @@ func _physics_process(delta: float) -> void:
 
 	# ถ้าอยู่ในสถานะ stunned หรือ ถูก hit (is_hit) ให้หยุดทำงานชั่วคราว
 	if is_stunned or is_hit:
-		# ถ้าเป็นสตั้นและเปิดโหมดติดตามผู้เล่น ให้หันไปหาผู้เล่นทุกเฟรมจนกว่าผู้เล่นจะหลุดจากสายตา
+		# ถ้าเป็นสตั้นและเปิดโหมดติดตามผู้เล่น ให้หันไปหาผู้เล่นทุกเฟรมจนกว่[...]
 		if is_stunned and _stun_track_player:
 			var player_node := (_stun_track_node if is_instance_valid(_stun_track_node) else _get_player_node())
 			if player_node != null and _last_player_visible:
@@ -325,7 +357,7 @@ func _advance_patrol_index() -> void:
 
 # ----------------------------------------------------------------
 func _update_animation() -> void:
-	# ถ้ากำลังรอการตอบสนองจากเสียง ให้แสดงอนิเมชัน "stun" หากมี (และให้หันตาม _last_facing)
+	# ถ้ากำลังรอการตอบสนองจากเสียง ให้แสดงอนิเมชัน "stun" หากมี (และให้หันตาม _last[...]
 	if _sound_reaction_waiting:
 		# ใช้ logic เดียวกับการเลือก animation ปกติ แต่พยายามหา stun_{dir} ก่อน
 		var dir_vec: Vector2 = _last_facing
@@ -400,6 +432,24 @@ func _update_animation() -> void:
 		_anim.flip_h = false
 
 # ----------------------------------------------------------------
+# Returns multiplier to apply to sight distance based on player's stealth state.
+# Default is 1.0 (no reduction). Uses the player's `state` property (player.gd State enum).
+func _get_player_stealth_multiplier(player_node: Node) -> float:
+	if player_node == null or not is_instance_valid(player_node):
+		return 1.0
+	var p_state = null
+	# Use generic get() so this is tolerant if the player node is a different script/class.
+	# get() returns null if property not present.
+	p_state = player_node.get("state")
+	if p_state == null:
+		return 1.0
+	if int(p_state) == PLAYER_STATE_SNEAK:
+		return stealth_sneak_multiplier
+	elif int(p_state) == PLAYER_STATE_CRAWL:
+		return stealth_crawl_multiplier
+	return 1.0
+
+# ----------------------------------------------------------------
 func _update_sight_visual_and_detection() -> void:
 	if not sight_debug and sight_rays <= 0:
 		return
@@ -415,16 +465,26 @@ func _update_sight_visual_and_detection() -> void:
 	# polygon first point should be the origin (in enemy-local coordinates)
 	pts.append(to_local(origin_global))
 	var half_fov = deg_to_rad(sight_fov_deg * 0.5)
+
+	# Determine player-based stealth multiplier (only for detection)
+	var player_node := _get_player_node()
+	var stealth_mult: float = _get_player_stealth_multiplier(player_node)
+	# if apply_stealth_to_sight_visual is true, shrink the debug polygon as well
+	var visual_mult: float = stealth_mult if apply_stealth_to_sight_visual else 1.0
+	var visual_range: float = sight_distance * visual_mult
+
+	# build polygon using visual_range (so polygon reflects stealth optionally)
 	var global_points: Array = []
 	for i in range(sight_rays + 1):
 		var t = float(i) / float(sight_rays)
 		var angle = lerp(-half_fov, half_fov, t)
 		var dir = forward.rotated(angle).normalized()
-		var target_global = origin_global + dir * sight_distance
+		var target_global = origin_global + dir * visual_range
 		var params := PhysicsRayQueryParameters2D.new()
 		params.from = origin_global
 		params.to = target_global
-		params.exclude = [self]
+		# use RID exclude in Godot 4
+		params.exclude = [self.get_rid()]
 		params.collision_mask = LAYER_WALL
 		var res = get_world_2d().direct_space_state.intersect_ray(params)
 		var hit_point: Vector2 = target_global
@@ -432,19 +492,24 @@ func _update_sight_visual_and_detection() -> void:
 			hit_point = res.position
 		global_points.append(hit_point)
 		pts.append(to_local(hit_point))
+
+	# Detection: use effective sight (sight_distance * stealth_mult)
+	var effective_sight: float = sight_distance * stealth_mult
+
 	var player_visible: bool = false
-	var player_node := _get_player_node()
 	if player_node != null:
 		var player_pos: Vector2 = (player_node as Node2D).global_position
 		var v = player_pos - origin_global
 		var dist = v.length()
-		if dist <= sight_distance:
+		if dist <= effective_sight:
 			var angle_to_player = abs(forward.angle_to(v.normalized()))
 			if angle_to_player <= half_fov:
 				var params2 := PhysicsRayQueryParameters2D.new()
 				params2.from = origin_global
+				# Raycast to player's position (we already limited by effective_sight)
 				params2.to = player_pos
-				params2.exclude = [self]
+				# use RID exclude
+				params2.exclude = [self.get_rid()]
 				params2.collision_mask = LAYER_WALL
 				var res2 = get_world_2d().direct_space_state.intersect_ray(params2)
 				if not res2:
@@ -469,6 +534,7 @@ func _on_player_spotted(player: Node) -> void:
 	ai_state = AIState.COMBAT
 	_pause_on_reach = true
 	_combat_search_timer = combat_search_duration
+	# note: sight_distance may be modified in combat; we keep effective detection logic
 	sight_distance = _original_sight_distance * combat_sight_multiplier
 	velocity = Vector2.ZERO
 	move_and_slide()
@@ -488,28 +554,22 @@ func _on_player_lost() -> void:
 # ----------------------------------------------------------------
 # Combat: use agent's next path positions. If agent exists but has no path, stop and print debug.
 func _handle_combat_state(delta: float) -> void:
+	# ลดตัวจับเวลาการยิง
+	_attack_timer = max(_attack_timer - delta, 0.0)
+
 	var player_node := _get_player_node()
-	# If player visible, prefer agent path to follow; otherwise fallback to last known pos behaviors
+	# If player visible -> shoot (don't immediately path toward them; instead fire while visible).
 	if player_node != null and _last_player_visible:
 		_last_known_player_pos = (player_node as Node2D).global_position
 		_combat_search_timer = combat_search_duration
-		# set agent target for pathfinding
-		if agent != null:
-			_set_agent_target(_last_known_player_pos)
-			var next_pos = _get_agent_next_position_safe()
-			if next_pos != null:
-				_set_facing_toward_point_continuous(next_pos)
-				_move_toward_target(next_pos, combat_move_speed, delta)
-				return
-			else:
-				# Agent doesn't have a path yet -> wait (avoid going straight through obstacles)
-				print("Enemy: agent has no path (combat to visible player). Check NavigationRegion / layers.")
-				velocity = Vector2.ZERO
-				move_and_slide()
-				return
-		# fallback: no agent => direct move
+		# face player and stop moving; shoot on cooldown
 		_set_facing_toward_point_continuous(_last_known_player_pos)
-		_move_toward_target(_last_known_player_pos, combat_move_speed, delta)
+		velocity = Vector2.ZERO
+		move_and_slide()
+		# attack when ready
+		if _attack_timer <= 0.0:
+			_shoot_at_player(player_node)
+			_attack_timer = attack_cooldown
 		return
 
 	# Not currently seeing player, move toward last known pos using path if available
@@ -666,7 +726,7 @@ func _end_stun() -> void:
 	_stun_cooldown_timer = cd
 	# _can_stun จะถูกเปิดอีกครั้งใน _physics_process เมื่อ timer เป็น 0
 
-# ใหม่: ถูกโจมตี (hit) ชั่วคราว — หยุดการเคลื่อนที่/AI ชั่วคราว แต่ไม่เกี่ยวกับ stun
+# ใหม่: ถูกโจมตี (hit) ชั่วคราว — หยุดการเคลื่อนที่/AI ชั่วคราว แต่ไม่เกี่ยวกั  [...]
 func hit(duration: float) -> void:
 	# หากกำลัง stun อยู่หรือกำลังถูก hit อยู่ ให้ข้าม
 	if is_stunned or is_hit:
@@ -710,7 +770,7 @@ func on_sound_detected(player: Node, sound_position: Vector2) -> void:
 		_last_known_player_pos = global_position
 
 	# เปลี่ยนเป็น COMBAT ทันทีตามที่ขอ
-	# ตั้งค่าเหมือน _on_player_spotted เพื่อให้พฤติกรรมการไล่/หันหน้าเหมือนการเห็นผู้เล่น
+	# ตั้งค่าเหมือน _on_player_spotted เพื่อให้พฤติกรรมการไล่/หันหน้าเหมือนการเห็นผู้  [...]
 	ai_state = AIState.COMBAT
 	_pause_on_reach = true
 	_combat_search_timer = combat_search_duration
@@ -726,7 +786,7 @@ func on_sound_detected(player: Node, sound_position: Vector2) -> void:
 	# หันหน้าตามตำแหน่งเสียง (continuous) และอัพเดตอนิเมชันทันที
 	_set_facing_toward_point_continuous(_last_known_player_pos)
 	_update_animation()
-	# (ไม่เรียก stun โดยอัตโนมัติ — ถ้าต้องการให้สตั้นก่อน คอล์ฟังก์ชัน stun(stun_duration) ได้)
+	# (ไม่เรียก stun โดยอัตโนมัติ — ถ้าต้องการให้สตั้นก่อน คอล์ฟังก์ชัน stun(stun_duration)  [... ]
 	emit_signal("player_spotted", player)  # คงสัญญาณไว้ในกรณีระบบอื่นฟังอยู่
 
 # ---------- จบการตอบสนองต่อ "เสียง" ----------
@@ -765,3 +825,164 @@ func _get_player_node() -> Node:
 	if arr.size() > 0:
 		return arr[0]
 	return null
+
+# ---------- ฟังก์ชันยิง (แก้ให้ใช้ muzzle หากมี) ----------
+func _shoot_at_player(player_node: Node) -> void:
+	if player_node == null or not is_instance_valid(player_node):
+		return
+	var target_pos = _get_player_aim_position(player_node)
+	_shoot_at_position(target_pos)
+
+func _shoot_at_position(target_pos: Vector2) -> void:
+	# origin: ถ้ามี muzzle ให้ใช้ muzzle.global_position, ถ้าไม่มีก็กลับไปใช้ sight_origin หรือ global_position
+	var origin = global_position
+	var muzzle_rot = 0.0
+	if muzzle != null and is_instance_valid(muzzle):
+		origin = muzzle.global_position
+		muzzle_rot = muzzle.global_rotation
+	elif sight_origin != null and is_instance_valid(sight_origin):
+		origin = sight_origin.global_position
+
+	# คำนวณตำแหน่ง spawn โดยใช้ muzzle_offset หมุนตาม muzzle (ถ้ามี)
+	var spawn_pos = origin
+	if muzzle != null and is_instance_valid(muzzle):
+		spawn_pos = origin + muzzle_offset.rotated(muzzle_rot)
+	else:
+		# ถ้าไม่มี muzzle ให้หมุนตาม _last_facing เหมือนเดิม
+		spawn_pos = origin + muzzle_offset.rotated(_last_facing.angle() if _last_facing.length() > 0 else 0.0)
+
+	# สร้าง projectile
+	if projectile_scene == null:
+		emit_signal("shoot_at", target_pos)
+		return
+
+	var inst = projectile_scene.instantiate()
+	inst.global_position = spawn_pos
+
+	# มุ่งไปยัง target จากตำแหน่ง spawn
+	var dir = (target_pos - spawn_pos)
+	if dir.length() == 0:
+		dir = Vector2.RIGHT
+	dir = dir.normalized()
+
+	# พยายามเรียกเมธอด launch ถ้ามี (จะตั้ง _shooter ใน projectile ได้)
+	if inst.has_method("launch"):
+		inst.launch(dir, projectile_speed, self)
+	else:
+		# fallback: ตั้งความเร็ว/linear_velocity ตามชื่อ property/เมธอดยอดนิยม
+		if inst.has_method("set_linear_velocity"):
+			inst.set_linear_velocity(dir * projectile_speed)
+		elif "linear_velocity" in inst:
+			inst.linear_velocity = dir * projectile_speed
+		elif "velocity" in inst:
+			inst.velocity = dir * projectile_speed
+		elif inst.has_method("set_velocity"):
+			inst.set_velocity(dir * projectile_speed)
+		elif inst.has_method("set_direction"):
+			inst.set_direction(dir)
+		# พยายามตั้ง shooter ถ้ามี property / setter
+		if "shooter" in inst:
+			inst.set("shooter", self)
+		elif inst.has_method("set_shooter"):
+			inst.set_shooter(self)
+		else:
+			# หาก projectile มีตัวแปรภายในชื่อ _shooter (เช่นตัวอย่าง enemy_bullet.gd) เราตั้งตรง ๆ ได้ (ไม่แนะนำแต่ใช้ได้)
+			if "_shooter" in inst:
+				inst._shooter = self
+
+	# เพิ่มลงใน scene tree (current scene หรือ root)
+	var root = get_tree().current_scene if get_tree().current_scene != null else get_tree().root
+	root.add_child(inst)
+
+	# ส่งสัญญาณเพื่อให้ระบบอื่น ๆ ฟังได้ด้วย
+	emit_signal("shoot_at", target_pos)
+
+# ---------- ฟังก์ชันหา aim/hurtbox ของ player ----------
+# Helper: หา center ของ hurtbox ใน node ของ player (fallbacks: child Aim -> get_aim_point() -> global_position)
+func _get_player_hurtbox_center(player_node: Node) -> Vector2:
+	if player_node == null or not is_instance_valid(player_node):
+		return Vector2.ZERO
+
+	# 1) ถ้าผู้เล่นมีเมธอดเฉพาะ ให้เรียกใช้เลย (รองรับ API ฝั่ง player)
+	if player_node.has_method("get_hurtbox_center"):
+		var v = player_node.get_hurtbox_center()
+		if typeof(v) == TYPE_VECTOR2:
+			return v
+
+	# 2) ถ้ามี child ชื่อ "Hurtbox" ให้ค้นหา CollisionShape2D ภายใน (เลือกอันที่ enabled)
+	if player_node.has_node("Hurtbox"):
+		var hb = player_node.get_node("Hurtbox")
+		# เก็บ CollisionShape2D ที่ไม่ถูก disabled
+		var active_shapes: Array = []
+		for ch in hb.get_children():
+			if ch is CollisionShape2D:
+				# CollisionShape2D มี property `disabled` (Godot 4) — ตรวจว่าถูก enable อยู่
+				if not ch.disabled:
+					active_shapes.append(ch)
+		# ถ้ามี shape ที่ active ให้คืน global_position ของ shape (หรือ average ถ้ามากกว่า 1)
+		if active_shapes.size() > 0:
+			if active_shapes.size() == 1:
+				return (active_shapes[0] as CollisionShape2D).global_position
+			var sum = Vector2.ZERO
+			for s in active_shapes:
+				sum += (s as CollisionShape2D).global_position
+			return sum / float(active_shapes.size())
+		# ถ้าไม่มี active shapes ให้ค้นหา collisionshape ทั่ว subtree เป็น fallback
+		var found = _find_collisionshape_in_children(hb)
+		if found != null:
+			return found.global_position
+
+	# 3) ถ้าไม่มี node "Hurtbox" หรือไม่พบ shape ข้างต้น ให้ลองค้นหาแบบ recursive ทั่ว player
+	var found_any = _find_collisionshape_in_children(player_node)
+	if found_any != null:
+		return found_any.global_position
+
+	# 4) ถ้ามี child "Aim" หรือ "AimPoint" ให้ใช้ (fallback)
+	if player_node.has_node("Aim"):
+		return (player_node.get_node("Aim") as Node2D).global_position
+	if player_node.has_node("AimPoint"):
+		return (player_node.get_node("AimPoint") as Node2D).global_position
+	if player_node.has_method("get_aim_point"):
+		var ap = player_node.get_aim_point()
+		if typeof(ap) == TYPE_VECTOR2:
+			return ap
+
+	# 5) สุดท้าย fallback เป็นตำแหน่ง global ของ player (ถ้าเป็น Node2D)
+	if player_node is Node2D:
+		return (player_node as Node2D).global_position
+
+	return Vector2.ZERO
+
+# recursive search helper: หา CollisionShape2D ใน subtree
+func _find_collisionshape_in_children(root: Node) -> CollisionShape2D:
+	if root == null or not is_instance_valid(root):
+		return null
+	for child in root.get_children():
+		if not is_instance_valid(child):
+			continue
+		if child is CollisionShape2D:
+			return child as CollisionShape2D
+		var sub = _find_collisionshape_in_children(child)
+		if sub != null:
+			return sub
+	return null
+
+# เลือกตำแหน่ง aim ของ player: พยายามใช้ hurtbox center ก่อน แล้ว fallback เป็น Aim / global_position
+func _get_player_aim_position(player_node: Node) -> Vector2:
+	var hb = _get_player_hurtbox_center(player_node)
+	if hb != Vector2.ZERO:
+		return hb
+	# fallback: Aim node or get_aim_point or global_position
+	if player_node == null or not is_instance_valid(player_node):
+		return Vector2.ZERO
+	if player_node.has_node("Aim"):
+		return (player_node.get_node("Aim") as Node2D).global_position
+	if player_node.has_node("AimPoint"):
+		return (player_node.get_node("AimPoint") as Node2D).global_position
+	if player_node.has_method("get_aim_point"):
+		var ap = player_node.get_aim_point()
+		if typeof(ap) == TYPE_VECTOR2:
+			return ap
+	if player_node is Node2D:
+		return (player_node as Node2D).global_position
+	return Vector2.ZERO

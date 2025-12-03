@@ -1,0 +1,57 @@
+[gd_scene load_steps=4 format=3 uid="uid://cydk53nqabmss"]
+
+[ext_resource type="Script" uid="uid://b7amee10oayhq" path="res://player/script/death_ui.gd" id="1_k3ily"]
+[ext_resource type="VideoStream" uid="uid://co4cklakygjwj" path="res://assets/video/Metal-Gear-Solid-Game-Over-screen.ogv" id="2_bkfim"]
+[ext_resource type="AudioStream" uid="uid://xhdur7gvj1bv" path="res://assets/audio/death.ogg" id="2_f5mgm"]
+
+[node name="GameOverUI" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_k3ily")
+
+[node name="Fade" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 32.0
+anchor_bottom = 18.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="Panel" type="Panel" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 32.0
+anchor_bottom = 18.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Message" type="RichTextLabel" parent="Panel"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 254.00003
+offset_top = 250.0
+offset_right = -872.0
+offset_bottom = -430.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(5.095, 5.095)
+text = "SHADOW IS DEAD."
+horizontal_alignment = 1
+
+[node name="Video" type="VideoStreamPlayer" parent="Panel"]
+layout_mode = 0
+offset_right = 1920.0
+offset_bottom = 1080.0
+scale = Vector2(0.665, 0.665)
+stream = ExtResource("2_bkfim")
+volume_db = -80.0
+
+[node name="Sfx" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("2_f5mgm")

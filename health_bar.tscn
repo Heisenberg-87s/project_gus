@@ -1,0 +1,94 @@
+[gd_scene load_steps=7 format=3 uid="uid://kml0362lhw4h"]
+
+[ext_resource type="Script" uid="uid://dtr7ww27wt1op" path="res://player/script/health_bar.gd" id="1_m7ell"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_m7ell"]
+bg_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kdjhy"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_srckl"]
+bg_color = Color(0, 0, 0, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1r8bn"]
+bg_color = Color(1, 1, 1, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_7igj3"]
+shadow_size = 10
+shadow_color = Color(0, 0, 0, 0.34117648)
+
+[node name="Health_bar" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+size_flags_horizontal = 0
+script = ExtResource("1_m7ell")
+
+[node name="Back" type="ProgressBar" parent="."]
+layout_mode = 0
+offset_left = 442.0
+offset_top = 660.0
+offset_right = 757.0
+offset_bottom = 687.0
+theme_override_styles/background = SubResource("StyleBoxFlat_m7ell")
+theme_override_styles/fill = SubResource("StyleBoxFlat_kdjhy")
+show_percentage = false
+
+[node name="Bar" type="ProgressBar" parent="."]
+layout_mode = 0
+offset_left = 448.0
+offset_top = 668.0
+offset_right = 751.0
+offset_bottom = 679.0
+theme_override_styles/background = SubResource("StyleBoxFlat_srckl")
+theme_override_styles/fill = SubResource("StyleBoxFlat_1r8bn")
+value = 100.0
+show_percentage = false
+
+[node name="gap" type="ProgressBar" parent="."]
+layout_mode = 0
+offset_left = 689.0
+offset_top = 660.0
+offset_right = 696.0
+offset_bottom = 687.0
+theme_override_styles/background = SubResource("StyleBoxFlat_m7ell")
+theme_override_styles/fill = SubResource("StyleBoxFlat_kdjhy")
+show_percentage = false
+
+[node name="gap2" type="ProgressBar" parent="."]
+layout_mode = 0
+offset_left = 628.0
+offset_top = 660.0
+offset_right = 635.0
+offset_bottom = 687.0
+theme_override_styles/background = SubResource("StyleBoxFlat_m7ell")
+theme_override_styles/fill = SubResource("StyleBoxFlat_kdjhy")
+show_percentage = false
+
+[node name="gap3" type="ProgressBar" parent="."]
+layout_mode = 0
+offset_left = 568.0
+offset_top = 660.0
+offset_right = 575.0
+offset_bottom = 687.0
+theme_override_styles/background = SubResource("StyleBoxFlat_m7ell")
+theme_override_styles/fill = SubResource("StyleBoxFlat_kdjhy")
+show_percentage = false
+
+[node name="gap4" type="ProgressBar" parent="."]
+layout_mode = 0
+offset_left = 508.0
+offset_top = 660.0
+offset_right = 515.0
+offset_bottom = 687.0
+theme_override_styles/background = SubResource("StyleBoxFlat_m7ell")
+theme_override_styles/fill = SubResource("StyleBoxFlat_kdjhy")
+show_percentage = false
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 0
+offset_left = 464.0
+offset_top = 644.0
+offset_right = 535.0
+offset_bottom = 667.0
+text = "SHADOW"
+label_settings = SubResource("LabelSettings_7igj3")
