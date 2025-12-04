@@ -90,7 +90,7 @@ var _crouch_delay_timer: float = 0.0
 # ===== HEALTH / DAMAGE =====
 @export var max_health: int = 100
 var health: int = 100
-@export var invuln_time: float = 3.0
+@export var invuln_time: float = 2.0
 var _invuln_timer: float = 0.0
 
 signal died
@@ -285,9 +285,7 @@ func _process(delta: float) -> void:
 	if state == State.PUNCH and not _punch_auto_end_by_anim and _punch_timer <= 0.0:
 		_end_punch()
 	_update_animation()
-	# ---- Reload scene ----
-	if Input.is_action_just_pressed("reload_scene"):
-		get_tree().reload_current_scene()
+
 
 func _physics_process(delta: float) -> void:
 	var target_speed: float = _get_speed_for_state()

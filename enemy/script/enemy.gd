@@ -23,8 +23,8 @@ var _search_scan_dir_timer: float = 0.45
 # -----------------------
 # การตั้งค่าการมอง/การตรวจจับ
 # -----------------------
-const LAYER_WALL: int = 1 << 0  # เปลี่ยนบิตหากเลเยอร์ผนังต่างออกไป
-const LAYER_VENT: int = 128 << 7
+# ปรับให้รวมเลเยอร์กำแพงปกติ (layer 1) และเลเยอร์ 8 (pipes ที่อยากให้บังสายตา)
+const LAYER_WALL: int = (1 << 0) | (1 << 7)  # layer 1 และ layer 8 (ถ้าต้องการเฉพาะ layer 8 ให้เปลี่ยนเป็น 1 << 7)
 
 
 @export var sight_distance: float = 300.0
@@ -80,7 +80,7 @@ var _sound_reaction_timer: float = 0.0
 var _sound_reaction_waiting: bool = false
 
 # ---------- การยิง (ใหม่) ----------
-# ถ้าใส่ projectile_scene จะ instance projectile เมื่อยิง
+# ถ้าใส่ projectile_scene จะ instance projectileเมื่อยิง
 @export var attack_cooldown: float = 0.1   # วินาทีระหว่างการยิง
 @export var projectile_scene: PackedScene
 @export var muzzle_offset: Vector2 = Vector2.ZERO
@@ -630,7 +630,8 @@ func _enter_search_state() -> void:
 	# เริ่มการค้นหา: ใช้ combat_search_duration และเริ่มสแกน
 	# ตั้งค่าเหมือน COMBAT เพื่อให้ sprite หัน/แสดงผลเหมือนกัน
 	_combat_search_timer = combat_search_duration
-	_scan_timer = combat_scan_interval
+	# ใช้ตัวแปรแยกสำหรับความถี่การหมุนในสถานะ SEARCH เพื่อให้ cooldown ที่ชัดเจน
+	_scan_timer = _search_scan_dir_timer
 	_scan_index = _closest_scan_index_to_vector(_last_facing)
 	_search_is_scanning = false
 	ai_state = AIState.SEARCH
@@ -649,8 +650,9 @@ func _handle_search_state(delta: float) -> void:
 	_combat_search_timer = max(_combat_search_timer - delta, 0.0)
 	if combat_scan:
 		_scan_timer -= delta
+		# ใช้เวลา cooldown เฉพาะสำหรับ SEARCH (_search_scan_dir_timer) เพื่อชะลอการหมุน
 		if _scan_timer <= 0.0:
-			_scan_timer = combat_scan_interval
+			_scan_timer = _search_scan_dir_timer
 			_scan_index = (_scan_index + 1) % _SCAN_DIRS.size()
 			# เปลี่ยน _last_facing เป็นทิศที่จะสแกน (cardinal) เพื่อให้ animation/flip ถูกต้อง
 			_last_facing = _SCAN_DIRS[_scan_index]

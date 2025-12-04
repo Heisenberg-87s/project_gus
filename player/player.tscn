@@ -54,10 +54,6 @@ region = Rect2(468, 9, 18, 34)
 atlas = ExtResource("2_qjkh3")
 region = Rect2(430, 9, 18, 34)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_g6k8r"]
-atlas = ExtResource("2_qjkh3")
-region = Rect2(1, 17, 18, 33)
-
 [sub_resource type="AtlasTexture" id="AtlasTexture_rptt4"]
 atlas = ExtResource("2_qjkh3")
 region = Rect2(336, 90, 18, 26)
@@ -161,6 +157,10 @@ region = Rect2(301, 52, 18, 34)
 [sub_resource type="AtlasTexture" id="AtlasTexture_vgvch"]
 atlas = ExtResource("2_qjkh3")
 region = Rect2(263, 52, 18, 34)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_g6k8r"]
+atlas = ExtResource("2_qjkh3")
+region = Rect2(1, 17, 18, 33)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_3dxkp"]
 atlas = ExtResource("2_qjkh3")
@@ -304,9 +304,6 @@ animations = [{
 "speed": 5.0
 }, {
 "frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_g6k8r")
-}, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_rptt4")
 }, {
@@ -836,8 +833,7 @@ shape = SubResource("RectangleShape2D_g1dw6")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 y_sort_enabled = true
 sprite_frames = SubResource("SpriteFrames_2fgmn")
-animation = &"death"
-frame_progress = 0.7616582
+animation = &"punch_down"
 offset = Vector2(0, -16.14)
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
@@ -846,6 +842,10 @@ offset = Vector2(0, -16.14)
 zoom = Vector2(1.265, 1.265)
 drag_horizontal_enabled = true
 drag_vertical_enabled = true
+drag_left_margin = 0.05
+drag_top_margin = 0.1
+drag_right_margin = 0.05
+drag_bottom_margin = 0.05
 editor_draw_limits = true
 editor_draw_drag_margin = true
 
@@ -920,7 +920,7 @@ position = Vector2(6, -25.333334)
 
 [node name="PunchPoint_down" type="Marker2D" parent="."]
 visible = false
-position = Vector2(0, 0.666667)
+position = Vector2(0, -16.666668)
 
 [node name="PunchPoint_up" type="Marker2D" parent="."]
 visible = false

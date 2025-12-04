@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=4 uid="uid://c4p3qjwyk0h3h"]
+[gd_scene load_steps=11 format=4 uid="uid://c4p3qjwyk0h3h"]
 
 [ext_resource type="Texture2D" uid="uid://bcwwxc1y27goe" path="res://assets/spritesheet_tiles.png" id="1_m8u5f"]
 [ext_resource type="PackedScene" uid="uid://2jfjcm6ebujw" path="res://player/player.tscn" id="1_rupst"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://cd1fmymmeibu0" path="res://reloadui.tscn" id="4_is3ju"]
 [ext_resource type="PackedScene" uid="uid://kml0362lhw4h" path="res://health_bar.tscn" id="5_o00ia"]
 [ext_resource type="PackedScene" uid="uid://cydk53nqabmss" path="res://ui/game_over_panel.tscn" id="6_4bqqs"]
+[ext_resource type="PackedScene" uid="uid://lljyty4qe7fo" path="res://ui/pause_menu.tscn" id="6_ynsuh"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_m8u5f"]
 vertices = PackedVector2Array(916, 532, 1263, 692.84375, 22.851563, 683.14844, 428, 532, 1263, 18.03125, 916, 428, 18.140625, 19.960938, 428, 172, 532, 172, 532, 428)
@@ -589,8 +590,35 @@ position = Vector2(594, 426.00003)
 
 [node name="Enemy" parent="Ysortobject" instance=ExtResource("3_m8u5f")]
 position = Vector2(403, 563)
+speed = 120.0
+acceleration = 1400.0
+arrival_distance = 8.0
 wait_time_at_point = 0.0
 patrol_root_path = NodePath("PatrolPoints")
+loop_patrol = true
+ping_patrol = false
+sight_distance = 300.0
+sight_fov_deg = 120.0
+sight_rays = 36
+sight_debug = true
+sight_debug_color_clear = Color(0, 1, 0, 0.18)
+sight_debug_color_alert = Color(1, 0, 0, 0.25)
+muzzle_path = NodePath("")
+combat_pause_duration = 0.6
+combat_search_duration = 10.0
+combat_sight_multiplier = 1.5
+combat_move_speed = 160.0
+stealth_sneak_multiplier = 0.6
+stealth_crawl_multiplier = 0.3
+apply_stealth_to_sight_visual = true
+combat_scan = true
+combat_scan_interval = 0.45
+stun_duration = 1.0
+stun_cooldown_min = 8.0
+stun_cooldown_max = 10.0
+attack_cooldown = 0.1
+muzzle_offset = Vector2(0, 0)
+projectile_speed = 1000.0
 
 [node name="NavTimer" type="Timer" parent="Ysortobject/Enemy"]
 autostart = true
@@ -613,8 +641,35 @@ position = Vector2(-5, -67.33333)
 
 [node name="Enemy2" parent="Ysortobject" instance=ExtResource("3_m8u5f")]
 position = Vector2(1164, 421)
+speed = 120.0
+acceleration = 1400.0
+arrival_distance = 8.0
 wait_time_at_point = 0.6
 patrol_root_path = NodePath("PatrolPoints")
+loop_patrol = true
+ping_patrol = false
+sight_distance = 300.0
+sight_fov_deg = 120.0
+sight_rays = 36
+sight_debug = true
+sight_debug_color_clear = Color(0, 1, 0, 0.18)
+sight_debug_color_alert = Color(1, 0, 0, 0.25)
+muzzle_path = NodePath("")
+combat_pause_duration = 0.6
+combat_search_duration = 10.0
+combat_sight_multiplier = 1.5
+combat_move_speed = 160.0
+stealth_sneak_multiplier = 0.6
+stealth_crawl_multiplier = 0.3
+apply_stealth_to_sight_visual = true
+combat_scan = true
+combat_scan_interval = 0.45
+stun_duration = 1.0
+stun_cooldown_min = 8.0
+stun_cooldown_max = 10.0
+attack_cooldown = 0.1
+muzzle_offset = Vector2(0, 0)
+projectile_speed = 1000.0
 
 [node name="NavTimer" type="Timer" parent="Ysortobject/Enemy2"]
 autostart = true
@@ -628,16 +683,13 @@ position = Vector2(0.66666675, -35.666668)
 
 [node name="UI" type="CanvasLayer" parent="."]
 
-[node name="Control" parent="UI" instance=ExtResource("4_is3ju")]
-offset_left = 3.0
-offset_top = 3.0
-offset_right = 3.0
-offset_bottom = 3.0
-
 [node name="Health_bar" parent="UI" instance=ExtResource("5_o00ia")]
 
+[node name="Control" parent="UI" instance=ExtResource("4_is3ju")]
+
 [node name="GameOverUI" parent="UI" instance=ExtResource("6_4bqqs")]
-visible = false
+
+[node name="PauseMenu" parent="UI" instance=ExtResource("6_ynsuh")]
 
 [connection signal="timeout" from="Ysortobject/Enemy/NavTimer" to="Ysortobject/Navigation2D" method="_on_nav_timer_timeout"]
 [connection signal="timeout" from="Ysortobject/Enemy/NavTimer" to="Ysortobject/Enemy" method="_on_nav_timer_timeout"]

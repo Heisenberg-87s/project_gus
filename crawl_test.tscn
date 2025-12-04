@@ -612,7 +612,35 @@ position = Vector2(350, 289.00003)
 
 [node name="Enemy" parent="Ysortobject" instance=ExtResource("2_fj53n")]
 position = Vector2(692, 297)
+speed = 120.0
+acceleration = 1400.0
+arrival_distance = 8.0
+wait_time_at_point = 0.1
 patrol_root_path = NodePath("PatrolPoints")
+loop_patrol = true
+ping_patrol = false
+sight_distance = 300.0
+sight_fov_deg = 120.0
+sight_rays = 36
+sight_debug = true
+sight_debug_color_clear = Color(0, 1, 0, 0.18)
+sight_debug_color_alert = Color(1, 0, 0, 0.25)
+muzzle_path = NodePath("")
+combat_pause_duration = 0.6
+combat_search_duration = 10.0
+combat_sight_multiplier = 1.5
+combat_move_speed = 160.0
+stealth_sneak_multiplier = 0.6
+stealth_crawl_multiplier = 0.3
+apply_stealth_to_sight_visual = true
+combat_scan = true
+combat_scan_interval = 0.45
+stun_duration = 1.0
+stun_cooldown_min = 8.0
+stun_cooldown_max = 10.0
+attack_cooldown = 0.1
+muzzle_offset = Vector2(0, 0)
+projectile_speed = 1000.0
 
 [node name="NavTimer" type="Timer" parent="Ysortobject/Enemy"]
 autostart = true
@@ -629,6 +657,5 @@ position = Vector2(51.333336, 0.33333334)
 [node name="Health_bar" parent="UI" instance=ExtResource("4_23vdc")]
 
 [node name="GameOverUI" parent="UI" instance=ExtResource("5_on1fq")]
-visible = false
 
 [connection signal="timeout" from="Ysortobject/Enemy/NavTimer" to="Ysortobject/Enemy" method="_on_nav_timer_timeout"]
