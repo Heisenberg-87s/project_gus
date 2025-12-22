@@ -162,66 +162,37 @@ animations = [{
 radius = 5.0
 height = 32.0
 
-[node name="Enemy" type="CharacterBody2D"]
+[node name="Enemy" type="CharacterBody2D" groups=["enemies"]]
 y_sort_enabled = true
-position = Vector2(0, 13.235)
 scale = Vector2(3, 3)
 collision_layer = 4
-collision_mask = 75
+collision_mask = 10
 platform_floor_layers = 4294967294
 platform_wall_layers = 1
 script = ExtResource("1_2mvqj")
-speed = null
-acceleration = null
-arrival_distance = null
-wait_time_at_point = null
-patrol_root_path = null
-loop_patrol = null
-ping_patrol = null
-sight_distance = null
-sight_fov_deg = null
-sight_rays = null
-sight_debug = null
-sight_debug_color_clear = null
-sight_debug_color_alert = null
 sight_origin_path = NodePath("SightOrigin")
-muzzle_path = null
-combat_pause_duration = null
-combat_search_duration = null
-combat_sight_multiplier = null
-combat_move_speed = null
-stealth_sneak_multiplier = null
-stealth_crawl_multiplier = null
-apply_stealth_to_sight_visual = null
-combat_scan = null
-combat_scan_interval = null
-stun_duration = null
-stun_cooldown_min = null
-stun_cooldown_max = null
 sound_reaction_pause = 0.6
-attack_cooldown = null
 projectile_scene = ExtResource("2_p200p")
-muzzle_offset = null
-projectile_speed = null
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-scale = Vector2(0.645, 0.645)
+scale = Vector2(0.315, 0.315)
 shape = SubResource("RectangleShape2D_ppra6")
 debug_color = Color(3.5616756e-06, 0.64768535, 0.21272892, 0.41960785)
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 y_sort_enabled = true
+position = Vector2(0, 2.55)
 sprite_frames = SubResource("SpriteFrames_5ffra")
 animation = &"hurt"
 frame_progress = 0.70498383
-offset = Vector2(0, -14.95)
+offset = Vector2(0, -14.505)
 
 [node name="Agent" type="NavigationAgent2D" parent="."]
 avoidance_enabled = true
 debug_enabled = true
 
 [node name="Area2D" type="Area2D" parent="." groups=["enemy_hurtboxes"]]
-position = Vector2(0, 1.44)
+position = Vector2(0, 3.42)
 collision_layer = 4
 collision_mask = 42
 script = ExtResource("3_ppra6")
@@ -235,4 +206,4 @@ debug_color = Color(0.9979996, 0, 0.1636788, 0.41960785)
 position = Vector2(0, 0.66666603)
 
 [node name="Muzzle" type="Marker2D" parent="."]
-position = Vector2(0, -21)
+position = Vector2(0, -17)

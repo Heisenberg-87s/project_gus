@@ -1,16 +1,20 @@
-[gd_scene load_steps=11 format=4 uid="uid://nkcsl1soejoi"]
+[gd_scene load_steps=28 format=4 uid="uid://nkcsl1soejoi"]
 
 [ext_resource type="PackedScene" uid="uid://2jfjcm6ebujw" path="res://player/player.tscn" id="1_nlb4o"]
 [ext_resource type="Texture2D" uid="uid://bcwwxc1y27goe" path="res://assets/spritesheet_tiles.png" id="1_q1s73"]
 [ext_resource type="PackedScene" uid="uid://v1cx2pek8gbo" path="res://enemy/enemy.tscn" id="2_fj53n"]
 [ext_resource type="PackedScene" uid="uid://kml0362lhw4h" path="res://health_bar.tscn" id="4_23vdc"]
+[ext_resource type="PackedScene" uid="uid://dq88dbc0344sd" path="res://enviroment/GrassArea.tscn" id="4_lu5wh"]
+[ext_resource type="PackedScene" uid="uid://cd1fmymmeibu0" path="res://reloadui.tscn" id="5_1baxk"]
+[ext_resource type="PackedScene" uid="uid://cn2v0wpbetm3i" path="res://item/medkit.tscn" id="5_li3b7"]
 [ext_resource type="PackedScene" uid="uid://cydk53nqabmss" path="res://ui/game_over_panel.tscn" id="5_on1fq"]
+[ext_resource type="PackedScene" uid="uid://b5uucg08n6mr3" path="res://ui/caution.tscn" id="7_b32ml"]
+[ext_resource type="PackedScene" uid="uid://lljyty4qe7fo" path="res://ui/pause_menu.tscn" id="8_gi32f"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_fj53n"]
-vertices = PackedVector2Array(1101, 663.9375, 129.03125, 661.0469, 490, 444, 1101, 133.84375, 422, 444, 129.96094, 126.14844, 422, 148, 490, 148)
-polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(4, 2, 1), PackedInt32Array(4, 1, 5, 6), PackedInt32Array(6, 5, 3, 7), PackedInt32Array(7, 3, 2)])
-outlines = Array[PackedVector2Array]([PackedVector2Array(110, 106, 1121, 114, 1121, 684, 109, 681)])
-agent_radius = 20.0
+vertices = PackedVector2Array(898, 178, 898, 130, 1270, 10.9765625, 1270, 708.0078, 10, 9.0078125, 432, 130, 10, 709.97656, 432, 463, 708, 463, 708, 415, 480, 178, 480, 415)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(4, 2, 1, 5), PackedInt32Array(6, 4, 5, 7), PackedInt32Array(3, 6, 7, 8), PackedInt32Array(0, 3, 8, 9), PackedInt32Array(10, 0, 9, 11)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(0, -1, 1280, 1, 1280, 718, 0, 720)])
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_fj53n"]
 texture = ExtResource("1_q1s73")
@@ -252,6 +256,7 @@ texture_region_size = Vector2i(64, 64)
 9:16/0 = 0
 9:17/0 = 0
 9:18/0 = 0
+9:18/0/y_sort_origin = 31
 9:19/0 = 0
 10:0/0 = 0
 10:3/0 = 0
@@ -562,12 +567,601 @@ texture_region_size = Vector2i(64, 64)
 sources/0 = SubResource("TileSetAtlasSource_fj53n")
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_q1s73"]
-size = Vector2(28, 142)
+size = Vector2(28, 145)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_on1fq"]
+atlas = ExtResource("1_q1s73")
+region = Rect2(666, 1332, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_1baxk"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_on1fq")
+}],
+"loop": true,
+"name": &"texture",
+"speed": 5.0
+}]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fj53n"]
-size = Vector2(28, 83)
+size = Vector2(28, 86)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_on1fq"]
+size = Vector2(84, 28)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1baxk"]
+size = Vector2(147, 28)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_b32ml"]
+size = Vector2(194, 28)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gi32f"]
+size = Vector2(227, 28)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_lu5wh"]
+size = Vector2(28, 25)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_li3b7"]
+size = Vector2(25, 28)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_nvc0m"]
+size = Vector2(25, 28)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_s47eq"]
+size = Vector2(60, 96)
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_li3b7"]
+texture = ExtResource("1_q1s73")
+separation = Vector2i(10, 10)
+texture_region_size = Vector2i(64, 64)
+0:0/0 = 0
+0:1/0 = 0
+0:2/0 = 0
+0:3/0 = 0
+0:4/0 = 0
+0:5/0 = 0
+0:6/0 = 0
+0:7/0 = 0
+0:8/0 = 0
+0:9/0 = 0
+0:10/0 = 0
+0:11/0 = 0
+0:12/0 = 0
+0:13/0 = 0
+0:14/0 = 0
+0:15/0 = 0
+0:16/0 = 0
+0:17/0 = 0
+0:18/0 = 0
+0:19/0 = 0
+1:0/0 = 0
+1:1/0 = 0
+1:2/0 = 0
+1:3/0 = 0
+1:4/0 = 0
+1:5/0 = 0
+1:6/0 = 0
+1:7/0 = 0
+1:8/0 = 0
+1:9/0 = 0
+1:10/0 = 0
+1:11/0 = 0
+1:12/0 = 0
+1:13/0 = 0
+1:14/0 = 0
+1:15/0 = 0
+1:16/0 = 0
+1:17/0 = 0
+1:18/0 = 0
+1:19/0 = 0
+2:0/0 = 0
+2:1/0 = 0
+2:2/0 = 0
+2:3/0 = 0
+2:4/0 = 0
+2:5/0 = 0
+2:6/0 = 0
+2:7/0 = 0
+2:8/0 = 0
+2:9/0 = 0
+2:10/0 = 0
+2:11/0 = 0
+2:12/0 = 0
+2:13/0 = 0
+2:14/0 = 0
+2:15/0 = 0
+2:16/0 = 0
+2:17/0 = 0
+2:18/0 = 0
+2:19/0 = 0
+3:0/0 = 0
+3:1/0 = 0
+3:2/0 = 0
+3:3/0 = 0
+3:4/0 = 0
+3:5/0 = 0
+3:6/0 = 0
+3:7/0 = 0
+3:8/0 = 0
+3:9/0 = 0
+3:10/0 = 0
+3:11/0 = 0
+3:12/0 = 0
+3:13/0 = 0
+3:14/0 = 0
+3:15/0 = 0
+3:16/0 = 0
+3:17/0 = 0
+3:18/0 = 0
+3:19/0 = 0
+4:0/0 = 0
+4:1/0 = 0
+4:2/0 = 0
+4:3/0 = 0
+4:4/0 = 0
+4:5/0 = 0
+4:6/0 = 0
+4:7/0 = 0
+4:8/0 = 0
+4:9/0 = 0
+4:10/0 = 0
+4:11/0 = 0
+4:12/0 = 0
+4:13/0 = 0
+4:14/0 = 0
+4:15/0 = 0
+4:16/0 = 0
+4:17/0 = 0
+4:18/0 = 0
+4:19/0 = 0
+5:0/0 = 0
+5:1/0 = 0
+5:2/0 = 0
+5:3/0 = 0
+5:4/0 = 0
+5:5/0 = 0
+5:6/0 = 0
+5:7/0 = 0
+5:8/0 = 0
+5:9/0 = 0
+5:10/0 = 0
+5:11/0 = 0
+5:12/0 = 0
+5:13/0 = 0
+5:14/0 = 0
+5:15/0 = 0
+5:16/0 = 0
+5:17/0 = 0
+5:18/0 = 0
+5:19/0 = 0
+6:0/0 = 0
+6:1/0 = 0
+6:2/0 = 0
+6:3/0 = 0
+6:4/0 = 0
+6:5/0 = 0
+6:6/0 = 0
+6:7/0 = 0
+6:8/0 = 0
+6:9/0 = 0
+6:10/0 = 0
+6:11/0 = 0
+6:12/0 = 0
+6:13/0 = 0
+6:14/0 = 0
+6:15/0 = 0
+6:16/0 = 0
+6:17/0 = 0
+6:18/0 = 0
+6:19/0 = 0
+7:0/0 = 0
+7:1/0 = 0
+7:2/0 = 0
+7:3/0 = 0
+7:4/0 = 0
+7:5/0 = 0
+7:6/0 = 0
+7:7/0 = 0
+7:8/0 = 0
+7:9/0 = 0
+7:10/0 = 0
+7:11/0 = 0
+7:12/0 = 0
+7:13/0 = 0
+7:14/0 = 0
+7:15/0 = 0
+7:16/0 = 0
+7:17/0 = 0
+7:18/0 = 0
+7:19/0 = 0
+8:0/0 = 0
+8:1/0 = 0
+8:2/0 = 0
+8:3/0 = 0
+8:4/0 = 0
+8:5/0 = 0
+8:6/0 = 0
+8:7/0 = 0
+8:8/0 = 0
+8:9/0 = 0
+8:10/0 = 0
+8:11/0 = 0
+8:12/0 = 0
+8:13/0 = 0
+8:14/0 = 0
+8:15/0 = 0
+8:16/0 = 0
+8:17/0 = 0
+8:18/0 = 0
+8:19/0 = 0
+9:0/0 = 0
+9:1/0 = 0
+9:2/0 = 0
+9:3/0 = 0
+9:4/0 = 0
+9:5/0 = 0
+9:6/0 = 0
+9:7/0 = 0
+9:8/0 = 0
+9:9/0 = 0
+9:10/0 = 0
+9:11/0 = 0
+9:12/0 = 0
+9:13/0 = 0
+9:14/0 = 0
+9:15/0 = 0
+9:16/0 = 0
+9:17/0 = 0
+9:18/0 = 0
+9:19/0 = 0
+10:0/0 = 0
+10:1/0 = 0
+10:2/0 = 0
+10:3/0 = 0
+10:4/0 = 0
+10:5/0 = 0
+10:6/0 = 0
+10:7/0 = 0
+10:8/0 = 0
+10:9/0 = 0
+10:10/0 = 0
+10:11/0 = 0
+10:12/0 = 0
+10:13/0 = 0
+10:14/0 = 0
+10:15/0 = 0
+10:16/0 = 0
+10:17/0 = 0
+10:18/0 = 0
+10:19/0 = 0
+11:0/0 = 0
+11:1/0 = 0
+11:2/0 = 0
+11:3/0 = 0
+11:4/0 = 0
+11:5/0 = 0
+11:6/0 = 0
+11:7/0 = 0
+11:8/0 = 0
+11:9/0 = 0
+11:10/0 = 0
+11:11/0 = 0
+11:12/0 = 0
+11:13/0 = 0
+11:14/0 = 0
+11:15/0 = 0
+11:16/0 = 0
+11:17/0 = 0
+11:18/0 = 0
+11:19/0 = 0
+12:0/0 = 0
+12:1/0 = 0
+12:2/0 = 0
+12:3/0 = 0
+12:4/0 = 0
+12:5/0 = 0
+12:6/0 = 0
+12:7/0 = 0
+12:8/0 = 0
+12:9/0 = 0
+12:10/0 = 0
+12:11/0 = 0
+12:12/0 = 0
+12:13/0 = 0
+12:14/0 = 0
+12:15/0 = 0
+12:16/0 = 0
+12:17/0 = 0
+12:18/0 = 0
+12:19/0 = 0
+13:0/0 = 0
+13:1/0 = 0
+13:2/0 = 0
+13:3/0 = 0
+13:4/0 = 0
+13:5/0 = 0
+13:6/0 = 0
+13:7/0 = 0
+13:8/0 = 0
+13:9/0 = 0
+13:10/0 = 0
+13:11/0 = 0
+13:12/0 = 0
+13:13/0 = 0
+13:14/0 = 0
+13:15/0 = 0
+13:16/0 = 0
+13:17/0 = 0
+13:18/0 = 0
+13:19/0 = 0
+14:0/0 = 0
+14:1/0 = 0
+14:2/0 = 0
+14:3/0 = 0
+14:4/0 = 0
+14:5/0 = 0
+14:6/0 = 0
+14:7/0 = 0
+14:8/0 = 0
+14:9/0 = 0
+14:10/0 = 0
+14:11/0 = 0
+14:12/0 = 0
+14:13/0 = 0
+14:14/0 = 0
+14:15/0 = 0
+14:16/0 = 0
+14:17/0 = 0
+14:18/0 = 0
+14:19/0 = 0
+15:0/0 = 0
+15:1/0 = 0
+15:2/0 = 0
+15:3/0 = 0
+15:4/0 = 0
+15:5/0 = 0
+15:6/0 = 0
+15:7/0 = 0
+15:8/0 = 0
+15:9/0 = 0
+15:10/0 = 0
+15:11/0 = 0
+15:12/0 = 0
+15:13/0 = 0
+15:14/0 = 0
+15:15/0 = 0
+15:16/0 = 0
+15:17/0 = 0
+15:18/0 = 0
+15:19/0 = 0
+16:0/0 = 0
+16:1/0 = 0
+16:2/0 = 0
+16:3/0 = 0
+16:4/0 = 0
+16:5/0 = 0
+16:6/0 = 0
+16:7/0 = 0
+16:8/0 = 0
+16:9/0 = 0
+16:10/0 = 0
+16:11/0 = 0
+16:12/0 = 0
+16:13/0 = 0
+16:14/0 = 0
+16:15/0 = 0
+16:16/0 = 0
+16:17/0 = 0
+16:18/0 = 0
+16:19/0 = 0
+17:0/0 = 0
+17:1/0 = 0
+17:2/0 = 0
+17:3/0 = 0
+17:4/0 = 0
+17:5/0 = 0
+17:6/0 = 0
+17:7/0 = 0
+17:8/0 = 0
+17:9/0 = 0
+17:10/0 = 0
+17:11/0 = 0
+17:12/0 = 0
+17:13/0 = 0
+17:14/0 = 0
+17:15/0 = 0
+17:16/0 = 0
+17:17/0 = 0
+17:18/0 = 0
+17:19/0 = 0
+18:0/0 = 0
+18:1/0 = 0
+18:2/0 = 0
+18:3/0 = 0
+18:4/0 = 0
+18:5/0 = 0
+18:6/0 = 0
+18:7/0 = 0
+18:8/0 = 0
+18:9/0 = 0
+18:10/0 = 0
+18:11/0 = 0
+18:12/0 = 0
+18:13/0 = 0
+18:14/0 = 0
+18:15/0 = 0
+18:16/0 = 0
+18:17/0 = 0
+18:18/0 = 0
+18:19/0 = 0
+19:0/0 = 0
+19:1/0 = 0
+19:2/0 = 0
+19:3/0 = 0
+19:4/0 = 0
+19:5/0 = 0
+19:6/0 = 0
+19:7/0 = 0
+19:8/0 = 0
+19:9/0 = 0
+19:10/0 = 0
+19:11/0 = 0
+19:12/0 = 0
+19:13/0 = 0
+19:14/0 = 0
+19:15/0 = 0
+19:16/0 = 0
+19:17/0 = 0
+19:18/0 = 0
+19:19/0 = 0
+20:0/0 = 0
+20:1/0 = 0
+20:2/0 = 0
+20:3/0 = 0
+20:4/0 = 0
+20:5/0 = 0
+20:6/0 = 0
+20:6/0/y_sort_origin = 30
+20:7/0 = 0
+20:8/0 = 0
+20:9/0 = 0
+20:10/0 = 0
+20:11/0 = 0
+20:12/0 = 0
+20:13/0 = 0
+20:14/0 = 0
+20:15/0 = 0
+20:16/0 = 0
+20:17/0 = 0
+20:18/0 = 0
+20:19/0 = 0
+21:0/0 = 0
+21:1/0 = 0
+21:2/0 = 0
+21:3/0 = 0
+21:4/0 = 0
+21:5/0 = 0
+21:6/0 = 0
+21:7/0 = 0
+21:8/0 = 0
+21:9/0 = 0
+21:10/0 = 0
+21:11/0 = 0
+21:12/0 = 0
+21:13/0 = 0
+21:14/0 = 0
+21:15/0 = 0
+21:16/0 = 0
+21:17/0 = 0
+21:18/0 = 0
+21:19/0 = 0
+22:0/0 = 0
+22:1/0 = 0
+22:2/0 = 0
+22:3/0 = 0
+22:4/0 = 0
+22:5/0 = 0
+22:6/0 = 0
+22:7/0 = 0
+22:8/0 = 0
+22:9/0 = 0
+22:10/0 = 0
+22:11/0 = 0
+22:12/0 = 0
+22:13/0 = 0
+22:14/0 = 0
+22:15/0 = 0
+22:16/0 = 0
+22:17/0 = 0
+22:18/0 = 0
+22:19/0 = 0
+23:0/0 = 0
+23:1/0 = 0
+23:2/0 = 0
+23:3/0 = 0
+23:4/0 = 0
+23:5/0 = 0
+23:6/0 = 0
+23:7/0 = 0
+23:8/0 = 0
+23:9/0 = 0
+23:10/0 = 0
+23:11/0 = 0
+23:12/0 = 0
+23:13/0 = 0
+23:14/0 = 0
+23:15/0 = 0
+23:16/0 = 0
+23:17/0 = 0
+23:18/0 = 0
+23:19/0 = 0
+24:0/0 = 0
+24:1/0 = 0
+24:2/0 = 0
+24:3/0 = 0
+24:4/0 = 0
+24:5/0 = 0
+24:6/0 = 0
+24:7/0 = 0
+24:8/0 = 0
+24:9/0 = 0
+24:10/0 = 0
+24:11/0 = 0
+24:12/0 = 0
+24:13/0 = 0
+24:14/0 = 0
+24:15/0 = 0
+24:16/0 = 0
+24:17/0 = 0
+24:18/0 = 0
+24:19/0 = 0
+25:0/0 = 0
+25:1/0 = 0
+25:2/0 = 0
+25:3/0 = 0
+25:4/0 = 0
+25:5/0 = 0
+25:6/0 = 0
+25:7/0 = 0
+25:8/0 = 0
+25:9/0 = 0
+25:10/0 = 0
+25:11/0 = 0
+25:12/0 = 0
+25:13/0 = 0
+25:14/0 = 0
+25:15/0 = 0
+25:16/0 = 0
+25:17/0 = 0
+25:18/0 = 0
+25:19/0 = 0
+26:0/0 = 0
+26:1/0 = 0
+26:2/0 = 0
+26:3/0 = 0
+26:4/0 = 0
+26:5/0 = 0
+26:6/0 = 0
+26:7/0 = 0
+26:8/0 = 0
+26:9/0 = 0
+26:10/0 = 0
+26:11/0 = 0
+26:12/0 = 0
+26:13/0 = 0
+26:14/0 = 0
+26:15/0 = 0
+26:16/0 = 0
+26:17/0 = 0
+26:18/0 = 0
+26:19/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_li3b7"]
+sources/0 = SubResource("TileSetAtlasSource_li3b7")
 
 [node name="Crawl-test" type="Node2D"]
+y_sort_enabled = true
 
 [node name="Ysortobject" type="Node2D" parent="."]
 y_sort_enabled = true
@@ -577,70 +1171,121 @@ y_sort_enabled = true
 navigation_polygon = SubResource("NavigationPolygon_fj53n")
 
 [node name="TileMapLayer" type="TileMapLayer" parent="Ysortobject/NavigationRegion2D"]
-z_index = 1
 y_sort_enabled = true
-tile_map_data = PackedByteArray("AAAcAAwAAAAJABIAAAAcABAAAAAJABIAAAAcABQAAAAJABIAAAAcABgAAAAJABIAAAAfABAAAAAXAAcAAAAZABAAAAAXAAcAAAA=")
+tile_map_data = PackedByteArray("AAAfABAAAAAXAAcAAAAZABAAAAAXAAcAAAAhABgAAAAXAAcAAAAhAB4AAAAXAAcAAAAoAAwAAAAXAAcAAAAoAAYAAAAXAAcAAAA=")
 tile_set = SubResource("TileSet_23vdc")
 
-[node name="WallVent" type="StaticBody2D" parent="Ysortobject/NavigationRegion2D"]
-position = Vector2(-28, 0)
-collision_mask = 4
+[node name="WallTex" type="StaticBody2D" parent="Ysortobject/NavigationRegion2D" groups=["walls"]]
+y_sort_enabled = true
+position = Vector2(-28, 2)
+collision_mask = 22
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Ysortobject/NavigationRegion2D/WallVent"]
-position = Vector2(484, 353)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ysortobject/NavigationRegion2D/WallTex"]
+position = Vector2(484, 351.5)
 shape = SubResource("RectangleShape2D_q1s73")
 
-[node name="Wallvent1" type="StaticBody2D" parent="Ysortobject/NavigationRegion2D"]
-position = Vector2(-28, 0)
-collision_mask = 4
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Ysortobject/NavigationRegion2D/WallTex"]
+y_sort_enabled = true
+position = Vector2(484, 354)
+scale = Vector2(1, 4.0156245)
+sprite_frames = SubResource("SpriteFrames_1baxk")
+animation = &"texture"
+offset = Vector2(0, -14.675)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Ysortobject/NavigationRegion2D/Wallvent1"]
-position = Vector2(484, 209.5)
+[node name="Wall2" type="StaticBody2D" parent="Ysortobject/NavigationRegion2D" groups=["walls"]]
+collision_mask = 22
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ysortobject/NavigationRegion2D/Wall2"]
+position = Vector2(456, 211)
 shape = SubResource("RectangleShape2D_fj53n")
 
-[node name="Vent" type="StaticBody2D" parent="Ysortobject/NavigationRegion2D"]
-position = Vector2(-28, -88)
+[node name="wallTex2" type="StaticBody2D" parent="Ysortobject/NavigationRegion2D" groups=["walls"]]
+y_sort_enabled = true
+position = Vector2(484, 439)
+collision_mask = 22
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ysortobject/NavigationRegion2D/wallTex2"]
+shape = SubResource("RectangleShape2D_on1fq")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Ysortobject/NavigationRegion2D/wallTex2"]
+y_sort_enabled = true
+position = Vector2(86, 14.56)
+rotation = 1.5707964
+scale = Vector2(1, 3.9999995)
+sprite_frames = SubResource("SpriteFrames_1baxk")
+animation = &"texture"
+offset = Vector2(-14.51, 0)
+
+[node name="wall3" type="StaticBody2D" parent="Ysortobject/NavigationRegion2D" groups=["walls"]]
+position = Vector2(698, 436)
+collision_mask = 22
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ysortobject/NavigationRegion2D/wall3"]
+position = Vector2(-73.5, 3)
+shape = SubResource("RectangleShape2D_1baxk")
+
+[node name="wallTex3" type="StaticBody2D" parent="Ysortobject/NavigationRegion2D" groups=["walls"]]
+y_sort_enabled = true
+position = Vector2(538, 152)
+collision_mask = 22
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ysortobject/NavigationRegion2D/wallTex3"]
+position = Vector2(1, 2)
+shape = SubResource("RectangleShape2D_b32ml")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Ysortobject/NavigationRegion2D/wallTex3"]
+y_sort_enabled = true
+position = Vector2(127.02153, 16.32691)
+rotation = 1.5707964
+scale = Vector2(1.0298017, 6.964952)
+sprite_frames = SubResource("SpriteFrames_1baxk")
+animation = &"texture"
+offset = Vector2(-13.355, 0)
+
+[node name="wall4" type="StaticBody2D" parent="Ysortobject/NavigationRegion2D" groups=["walls"]]
+position = Vector2(2, 30)
+collision_mask = 22
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ysortobject/NavigationRegion2D/wall4"]
+position = Vector2(772.5, 124)
+shape = SubResource("RectangleShape2D_gi32f")
+
+[node name="Vent" type="StaticBody2D" parent="Ysortobject/NavigationRegion2D" groups=["walls"]]
+position = Vector2(452, 264)
 collision_layer = 128
 collision_mask = 4
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Ysortobject/NavigationRegion2D/Vent"]
-position = Vector2(484, 353)
-shape = SubResource("RectangleShape2D_q1s73")
+position = Vector2(4, 2.5)
+shape = SubResource("RectangleShape2D_lu5wh")
+debug_color = Color(0.64705884, 0.52156866, 0, 0.8117647)
+
+[node name="Vent2" type="StaticBody2D" parent="Ysortobject/NavigationRegion2D" groups=["walls"]]
+position = Vector2(24, 30)
+collision_layer = 128
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ysortobject/NavigationRegion2D/Vent2"]
+position = Vector2(624.5, 124)
+shape = SubResource("RectangleShape2D_li3b7")
+debug_color = Color(0.64705884, 0.52156866, 0, 0.8117647)
+
+[node name="Vent3" type="StaticBody2D" parent="Ysortobject/NavigationRegion2D" groups=["walls"]]
+position = Vector2(536, 435)
+collision_layer = 128
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ysortobject/NavigationRegion2D/Vent3"]
+position = Vector2(2.5, 4)
+shape = SubResource("RectangleShape2D_nvc0m")
+debug_color = Color(0.64705884, 0.52156866, 0, 0.8117647)
 
 [node name="Player" parent="Ysortobject" instance=ExtResource("1_nlb4o")]
-position = Vector2(350, 289.00003)
+position = Vector2(285, 309)
 
 [node name="Enemy" parent="Ysortobject" instance=ExtResource("2_fj53n")]
-position = Vector2(692, 297)
-speed = 120.0
-acceleration = 1400.0
-arrival_distance = 8.0
-wait_time_at_point = 0.1
+position = Vector2(858, 309)
 patrol_root_path = NodePath("PatrolPoints")
-loop_patrol = true
-ping_patrol = false
-sight_distance = 300.0
-sight_fov_deg = 120.0
-sight_rays = 36
-sight_debug = true
-sight_debug_color_clear = Color(0, 1, 0, 0.18)
-sight_debug_color_alert = Color(1, 0, 0, 0.25)
-muzzle_path = NodePath("")
-combat_pause_duration = 0.6
-combat_search_duration = 10.0
-combat_sight_multiplier = 1.5
-combat_move_speed = 160.0
-stealth_sneak_multiplier = 0.6
-stealth_crawl_multiplier = 0.3
-apply_stealth_to_sight_visual = true
-combat_scan = true
-combat_scan_interval = 0.45
-stun_duration = 1.0
-stun_cooldown_min = 8.0
-stun_cooldown_max = 10.0
-attack_cooldown = 0.1
-muzzle_offset = Vector2(0, 0)
-projectile_speed = 1000.0
 
 [node name="NavTimer" type="Timer" parent="Ysortobject/Enemy"]
 autostart = true
@@ -650,12 +1295,57 @@ autostart = true
 [node name="p1" type="Marker2D" parent="Ysortobject/Enemy/PatrolPoints"]
 
 [node name="p2" type="Marker2D" parent="Ysortobject/Enemy/PatrolPoints"]
-position = Vector2(51.333336, 0.33333334)
+position = Vector2(-0.33333206, 27.333334)
+
+[node name="Enemy2" parent="Ysortobject" instance=ExtResource("2_fj53n")]
+position = Vector2(576, 117)
+patrol_root_path = NodePath("PatrolPoints")
+sight_origin_path = NodePath("../Enemy/SightOrigin")
+
+[node name="NavTimer" type="Timer" parent="Ysortobject/Enemy2"]
+autostart = true
+
+[node name="PatrolPoints" type="Node2D" parent="Ysortobject/Enemy2"]
+
+[node name="p1" type="Marker2D" parent="Ysortobject/Enemy2/PatrolPoints"]
+
+[node name="GrassArea" parent="Ysortobject" instance=ExtResource("4_lu5wh")]
+y_sort_enabled = true
+position = Vector2(388, 408)
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="Ysortobject/GrassArea"]
+position = Vector2(20, -13)
+shape = SubResource("RectangleShape2D_s47eq")
+debug_color = Color(0.9805134, 7.566154e-05, 0.7491932, 0.41960785)
+
+[node name="TileMapLayer" type="TileMapLayer" parent="Ysortobject/GrassArea"]
+y_sort_enabled = true
+position = Vector2(20, -13)
+tile_map_data = PackedByteArray("AAD///7/AAAUAAYAAAAAAP7/AAAUAAYAAAAAAP//AAAUAAYAAAAAAAAAAAAUAAYAAAAAAAEAAAAUAAYAAAD//wEAAAAUAAYAAAD//wAAAAAUAAYAAAA=")
+tile_set = SubResource("TileSet_li3b7")
+
+[node name="Medkit" parent="Ysortobject" instance=ExtResource("5_li3b7")]
+position = Vector2(284, 395)
+
+[node name="Medkit2" parent="Ysortobject" instance=ExtResource("5_li3b7")]
+position = Vector2(176, 384)
 
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="Health_bar" parent="UI" instance=ExtResource("4_23vdc")]
 
+[node name="caution" parent="UI" instance=ExtResource("7_b32ml")]
+
 [node name="GameOverUI" parent="UI" instance=ExtResource("5_on1fq")]
+visible = false
+
+[node name="Control" parent="UI" instance=ExtResource("5_1baxk")]
+offset_left = 3.0
+offset_top = 5.0
+offset_right = 3.0
+offset_bottom = 5.0
+
+[node name="PauseMenu" parent="UI" instance=ExtResource("8_gi32f")]
 
 [connection signal="timeout" from="Ysortobject/Enemy/NavTimer" to="Ysortobject/Enemy" method="_on_nav_timer_timeout"]
+[connection signal="timeout" from="Ysortobject/Enemy2/NavTimer" to="Ysortobject/Enemy2" method="_on_nav_timer_timeout"]

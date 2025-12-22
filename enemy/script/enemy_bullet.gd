@@ -81,6 +81,15 @@ func _handle_hit(res: Dictionary) -> void:
 
 	# Find the damage target: climb parents until find take_damage or apply_damage
 	var damage_target = _find_damage_target(collider)
+
+	# If the collider or the resolved damage_target is the player, ensure bullet is removed.
+	var hit_player: bool = false
+	if collider != null and collider is Node and (collider as Node).is_in_group("player"):
+		hit_player = true
+	if damage_target != null and damage_target.is_in_group("player"):
+		hit_player = true
+
+	# Apply damage if applicable
 	if damage_target != null:
 		# Preferred signature: take_damage(amount, source)
 		if damage_target.has_method("take_damage"):
@@ -93,7 +102,12 @@ func _handle_hit(res: Dictionary) -> void:
 				var h = damage_target.get("health")
 				if typeof(h) in [TYPE_INT, TYPE_FLOAT]:
 					damage_target.set("health", max(h - damage, 0))
+
+	# Emit hit signal for other systems (may be null target)
 	emit_signal("hit", damage_target, pos)
+
+	# Remove bullet when it hits anything relevant.
+	# Per request: if it hits player, it should disappear — we always free the bullet here.
 	queue_free()
 
 func _find_damage_target(collider: Object) -> Node:
