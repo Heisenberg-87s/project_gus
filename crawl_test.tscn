@@ -1337,7 +1337,6 @@ position = Vector2(176, 384)
 [node name="caution" parent="UI" instance=ExtResource("7_b32ml")]
 
 [node name="GameOverUI" parent="UI" instance=ExtResource("5_on1fq")]
-visible = false
 
 [node name="Control" parent="UI" instance=ExtResource("5_1baxk")]
 offset_left = 3.0

@@ -80,7 +80,7 @@ animations = [{
 "texture": SubResource("AtlasTexture_tbw0t")
 }],
 "loop": true,
-"name": &"hurt",
+"name": &"hit",
 "speed": 12.0
 }, {
 "frames": [{
@@ -183,8 +183,7 @@ debug_color = Color(3.5616756e-06, 0.64768535, 0.21272892, 0.41960785)
 y_sort_enabled = true
 position = Vector2(0, 2.55)
 sprite_frames = SubResource("SpriteFrames_5ffra")
-animation = &"hurt"
-frame_progress = 0.70498383
+animation = &"hit"
 offset = Vector2(0, -14.505)
 
 [node name="Agent" type="NavigationAgent2D" parent="."]

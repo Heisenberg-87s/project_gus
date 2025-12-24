@@ -1,6 +1,7 @@
-[gd_scene load_steps=7 format=3 uid="uid://kml0362lhw4h"]
+[gd_scene load_steps=8 format=3 uid="uid://kml0362lhw4h"]
 
 [ext_resource type="Script" uid="uid://dtr7ww27wt1op" path="res://player/script/health_bar.gd" id="1_m7ell"]
+[ext_resource type="PackedScene" uid="uid://dth3xnfeitujx" path="res://ui/weapon_ui.tscn" id="2_kdjhy"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_m7ell"]
 bg_color = Color(0, 0, 0, 1)
@@ -92,3 +93,10 @@ offset_right = 535.0
 offset_bottom = 667.0
 text = "SHADOW"
 label_settings = SubResource("LabelSettings_7igj3")
+
+[node name="weapon_ui" parent="." instance=ExtResource("2_kdjhy")]
+layout_mode = 1
+offset_left = 1280.0
+offset_top = 719.0
+offset_right = 1280.0
+offset_bottom = 719.0

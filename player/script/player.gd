@@ -65,8 +65,8 @@ var cardinal_direction: Vector2 = Vector2.DOWN
 var facing: Vector2 = Vector2.DOWN
 
 # ===== PUNCH (melee) =====
-@export var punch_duration: float = 0.20
-@export var punch_cooldown: float = 0.1
+@export var punch_duration: float = 0.4
+@export var punch_cooldown: float = 0.0
 @export var punch_move_multiplier: float = 0.4
 @export var punch_reach: float = 28.0
 @export var punch_radius: float = 18.0
@@ -85,7 +85,7 @@ var _gun_cooldown: float = 0.0
 # temporary shoot animation
 var _temp_anim_name: String = ""
 var _temp_anim_timer: float = 0.0
-@export var shoot_anim_time: float = 1.0
+@export var shoot_anim_time: float = 0.2
 var _current_anim: String = ""
 
 # ===== Crouch / Sit stand-delay (new) =====
@@ -102,8 +102,10 @@ var _invuln_timer: float = 0.0
 
 signal died
 
+signal weapon_mode_changed(new_mode: int)
+
 # ===== VISUAL DAMAGE FEEDBACK =====
-@export var flash_color: Color = Color(1.0, 0.502, 0.502, 0.0)
+@export var flash_color: Color = Color(0.727, 0.0, 0.163, 0.0)
 var _orig_modulate: Color = Color(1,1,1,1)
 
 # ===== BLINK (invulnerability visual) =====
@@ -238,16 +240,23 @@ func _process(delta: float) -> void:
 	if crawl_grass_now != _was_grass_crawl:
 		_was_grass_crawl = crawl_grass_now
 		if animated_sprite:
-			# compute base modulate from original but with adjusted alpha
-			var base = _orig_modulate
 			if crawl_grass_now:
+				# use original base modulate but with reduced alpha
+				var base = _orig_modulate
 				base.a = _player_alpha_in_grass_crawl
 				_current_base_modulate = base
+				# set z_index for both player node and sprite so player renders above foliage as requested
+				self.z_index = _player_zindex_in_grass_crawl
+				animated_sprite.z_index = _player_zindex_in_grass_crawl
 			else:
+				var base = _orig_modulate
 				base.a = 1.0
 				_current_base_modulate = base
-			# apply to sprite respecting blink state
-			_apply_modulate()
+				# restore z_index
+				self.z_index = _player_zindex_normal
+				animated_sprite.z_index = _player_zindex_normal
+		# apply modulate respecting blink state
+		_apply_modulate()
 
 	# timers
 	_gun_cooldown = max(_gun_cooldown - delta, 0.0) if _gun_cooldown > 0.0 else 0.0
@@ -562,6 +571,11 @@ func _toggle_mode() -> void:
 	mode = Mode.GUN if mode == Mode.NORMAL else Mode.NORMAL
 	_select_muzzle_for_cardinal(cardinal_direction)
 	_update_animation(true)
+	# Notify HUD / listeners about mode change
+	emit_signal("weapon_mode_changed", mode)
+	# If you have an ammo variable, emit ammo update too:
+	# if has_method("get_ammo_count"):
+	#     emit_signal("ammo_changed", get_ammo_count())
 
 func _get_muzzle_from_names(names: Array) -> Marker2D:
 	for name in names:

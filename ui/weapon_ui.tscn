@@ -1,0 +1,59 @@
+[gd_scene load_steps=4 format=3 uid="uid://dth3xnfeitujx"]
+
+[ext_resource type="Script" uid="uid://cxf1hdjrnl57r" path="res://ui/weapon_ui.gd" id="1_3tokw"]
+[ext_resource type="Texture2D" uid="uid://dpjbrht186vf8" path="res://assets/pistol.png" id="1_ihfr4"]
+[ext_resource type="Texture2D" uid="uid://cvv2wains7b1h" path="res://assets/fist.png" id="2_f68lp"]
+
+[node name="weapon_ui" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_3tokw")
+icon_texture_hand = ExtResource("2_f68lp")
+icon_texture_gun = ExtResource("1_ihfr4")
+
+[node name="RightPanel" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -190.0
+offset_top = -261.99997
+offset_right = -140.0
+offset_bottom = -211.99997
+grow_horizontal = 0
+grow_vertical = 0
+scale = Vector2(2.16, 2.16)
+
+[node name="WeaponIconContainer" type="Control" parent="RightPanel"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+
+[node name="WeaponIcon" type="TextureRect" parent="RightPanel/WeaponIconContainer"]
+layout_mode = 0
+offset_left = 25.0
+offset_right = 25.0
+offset_bottom = 50.0
+stretch_mode = 5
+
+[node name="AmmoLabel" type="Label" parent="RightPanel"]
+layout_mode = 2
+
+[node name="ColorRect" type="ColorRect" parent="."]
+z_index = -1
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -152.0
+offset_top = -720.0
+grow_horizontal = 0
+grow_vertical = 0
+color = Color(0, 0, 0, 1)
