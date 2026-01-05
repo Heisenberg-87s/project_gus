@@ -1,7 +1,8 @@
-[gd_scene load_steps=87 format=3 uid="uid://2jfjcm6ebujw"]
+[gd_scene load_steps=92 format=3 uid="uid://2jfjcm6ebujw"]
 
 [ext_resource type="Script" uid="uid://10csggpybcp3" path="res://player/script/player.gd" id="1_mm0hj"]
 [ext_resource type="Script" uid="uid://dultfih7fxw6c" path="res://player/script/player_hurtbox.gd" id="3_g1dw6"]
+[ext_resource type="Texture2D" uid="uid://ctjc2rhyla04t" path="res://player/sprites/wall-right.png" id="3_qjkh3"]
 [ext_resource type="Texture2D" uid="uid://cju7e8tp6eobi" path="res://player/sprites/Solid SnakeGBC.png" id="3_yw30f"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_g1dw6"]
@@ -318,6 +319,22 @@ region = Rect2(448, 31, 20, 20)
 [sub_resource type="AtlasTexture" id="AtlasTexture_5ejfk"]
 atlas = ExtResource("3_yw30f")
 region = Rect2(447, 124, 16, 27)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yw30f"]
+atlas = ExtResource("3_yw30f")
+region = Rect2(36, 67, 16, 24)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qjkh3"]
+atlas = ExtResource("3_yw30f")
+region = Rect2(39, 341, 16, 24)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ebec5"]
+atlas = ExtResource("3_qjkh3")
+region = Rect2(0, 0, 16, 24)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yllr7"]
+atlas = ExtResource("3_yw30f")
+region = Rect2(32, 592, 16, 24)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_2fgmn"]
 animations = [{
@@ -1135,6 +1152,38 @@ animations = [{
 "loop": true,
 "name": &"walk_up",
 "speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yw30f")
+}],
+"loop": true,
+"name": &"wall_down",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qjkh3")
+}],
+"loop": true,
+"name": &"wall_left",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ebec5")
+}],
+"loop": true,
+"name": &"wall_right",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yllr7")
+}],
+"loop": true,
+"name": &"wall_up",
+"speed": 5.0
 }]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_rkbax"]
@@ -1157,7 +1206,7 @@ collision_mask = 37377
 platform_floor_layers = 4294967294
 platform_wall_layers = 1
 script = ExtResource("1_mm0hj")
-max_health = 50
+max_health = 1000
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -3)
@@ -1168,21 +1217,11 @@ y_sort_enabled = true
 texture_filter = 1
 position = Vector2(0, 5)
 sprite_frames = SubResource("SpriteFrames_2fgmn")
-animation = &"punch_down"
+animation = &"wall_up"
+frame_progress = 0.33611873
 offset = Vector2(0, -10)
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
-
-[node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(1.265, 1.265)
-drag_horizontal_enabled = true
-drag_vertical_enabled = true
-drag_left_margin = 0.05
-drag_top_margin = 0.1
-drag_right_margin = 0.05
-drag_bottom_margin = 0.05
-editor_draw_limits = true
-editor_draw_drag_margin = true
 
 [node name="Hurtbox" type="Area2D" parent="." node_paths=PackedStringArray("source_player") groups=["player_hurtbox"]]
 visible = false
@@ -1276,6 +1315,25 @@ gizmo_extents = 2.1
 visible = false
 position = Vector2(0, -24)
 gizmo_extents = 2.1
+
+[node name="RC_WALL_UP" type="RayCast2D" parent="."]
+position = Vector2(0, -6)
+target_position = Vector2(0, -6)
+collision_mask = 129
+
+[node name="RC_WALL_DOWN" type="RayCast2D" parent="."]
+target_position = Vector2(0, 6)
+collision_mask = 129
+
+[node name="RC_WALL_LEFT" type="RayCast2D" parent="."]
+position = Vector2(0, -3)
+target_position = Vector2(-6, 0)
+collision_mask = 129
+
+[node name="RC_WALL_RIGHT" type="RayCast2D" parent="."]
+position = Vector2(0, -3)
+target_position = Vector2(6, 0)
+collision_mask = 129
 
 [connection signal="area_entered" from="Hurtbox" to="." method="_on_hurtbox_area_entered"]
 [connection signal="area_exited" from="Hurtbox" to="." method="_on_hurtbox_area_exited"]

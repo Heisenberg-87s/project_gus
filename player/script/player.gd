@@ -2,7 +2,7 @@ extends CharacterBody2D
 class_name player
 
 enum Mode { NORMAL, GUN }
-enum State { IDLE, WALK, RUN, SNEAK, CRAWL, PUNCH }
+enum State { IDLE, WALK, RUN, SNEAK, CRAWL, PUNCH, WALL_CLING } # เพิ่ม WALL_CLING
 
 # ===== MOVEMENT CONFIG =====
 const MAX_SPEED: float = 150.0
@@ -29,6 +29,18 @@ var _active_muzzle: Marker2D = null
 @onready var _punch_point_down: Node2D = get_node_or_null("PunchPoint_down") as Node2D
 @onready var _punch_point_left: Node2D = get_node_or_null("PunchPoint_left") as Node2D
 @onready var _punch_point_right: Node2D = get_node_or_null("PunchPoint_right") as Node2D
+
+# ===== WALL CLING NODES (ต้องเพิ่มใน scene ของ Player ถ้าไม่มี) =====
+# Add four RayCast2D nodes named: RC_WALL_UP, RC_WALL_DOWN, RC_WALL_LEFT, RC_WALL_RIGHT
+# Each RayCast2D should have `enabled = true` and an appropriate target_position (e.g., (0,-16), (0,16), (-16,0), (16,0)).
+@onready var rc_wall_up: RayCast2D = get_node_or_null("RC_WALL_UP") as RayCast2D
+@onready var rc_wall_down: RayCast2D = get_node_or_null("RC_WALL_DOWN") as RayCast2D
+@onready var rc_wall_left: RayCast2D = get_node_or_null("RC_WALL_LEFT") as RayCast2D
+@onready var rc_wall_right: RayCast2D = get_node_or_null("RC_WALL_RIGHT") as RayCast2D
+
+# Camera2D used for peek. Prefer a Camera2D child of player named "Camera2D".
+# Fallback: will try to use current viewport camera if not a child.
+@onready var cam: Camera2D = get_node_or_null("Camera2D") as Camera2D
 
 # ===== Hurtbox node (ต้องเป็นลูกของ Player ตรงชื่อ "Hurtbox") =====
 @onready var hurtbox_area: Area2D = get_node_or_null("Hurtbox") as Area2D
@@ -57,12 +69,31 @@ var _sound_emit_cooldown_timer: float = 0.0
 @export var footstep_sfx: AudioStream = sound_emit_sfx
 var _footstep_timer: float = 0.0
 
+# Suppress footstep briefly after exiting wall_cling (so push-off doesn't create a footstep)
+@export var footstep_exit_suppress_time: float = 0.28
+var _suppress_footstep_after_exit_timer: float = 0.0
+
 # ===== MODE/STATE/INPUT VARS =====
 var mode: int = Mode.NORMAL
 var state: int = State.IDLE
 var direction: Vector2 = Vector2.ZERO
 var cardinal_direction: Vector2 = Vector2.DOWN
 var facing: Vector2 = Vector2.DOWN
+
+# ===== WALL CLING CONFIG (exported so editable in Inspector) =====
+@export var wall_cling_enabled: bool = true
+@export var wall_cling_push_distance: float = 24.0
+@export var wall_cling_peek_offset: float = 100.0
+@export var wall_cling_push_speed: float = 320.0
+@export var wall_cling_camera_time: float = 0.18
+# default allowed states (but we'll also require mode == Mode.NORMAL)
+@export var wall_cling_allowed_states: Array = [State.IDLE, State.WALK, State.RUN, State.SNEAK]
+
+# internal wall cling trackers
+var _is_wall_clinging: bool = false
+var _wall_cling_dir: Vector2 = Vector2.ZERO
+var _saved_footstep_enabled: bool = true
+var _peek_tween: Tween = null
 
 # ===== PUNCH (melee) =====
 @export var punch_duration: float = 0.4
@@ -103,6 +134,10 @@ var _invuln_timer: float = 0.0
 signal died
 
 signal weapon_mode_changed(new_mode: int)
+
+# Wall cling signals
+signal wall_cling_started(direction: Vector2)
+signal wall_cling_ended()
 
 # ===== VISUAL DAMAGE FEEDBACK =====
 @export var flash_color: Color = Color(0.727, 0.0, 0.163, 0.0)
@@ -147,6 +182,19 @@ var _hurtbox_original_pos: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
 	add_to_group("player")
+	# If Camera2D wasn't set as a child named Camera2D, try to find current viewport camera
+	if cam == null:
+		# try to find a Camera2D in children
+		for c in get_children():
+			if c is Camera2D:
+				cam = c
+				break
+	# fallback to viewport camera (may be null)
+	if cam == null:
+		var vp_cam = get_viewport().get_camera_2d()
+		if vp_cam != null:
+			cam = vp_cam
+
 	_select_muzzle_for_cardinal(cardinal_direction)
 	if animated_sprite:
 		animated_sprite.connect("animation_finished", Callable(self, "_on_animation_finished"))
@@ -234,6 +282,15 @@ func _process(delta: float) -> void:
 	_current_offset_y = lerp(_current_offset_y, desired_offset, t)
 	animated_sprite.position = _base_sprite_pos + Vector2(0.0, _current_offset_y)
 	_update_hurtbox_position()
+
+	# if wall cling active but wall lost or player got punched/stunned -> exit cling
+	if _is_wall_clinging:
+		# exit if no longer touching wall
+		if _get_wall_cling_direction() == Vector2.ZERO:
+			_exit_wall_cling(false)
+		# exit if punched/stunned (state==PUNCH)
+		if state == State.PUNCH:
+			_exit_wall_cling(false)
 
 	# grass crawl visuals: update base modulate (do not overwrite actual modulate directly)
 	var crawl_grass_now := is_in_grass() and state == State.CRAWL
@@ -333,8 +390,12 @@ func _process(delta: float) -> void:
 				_update_animation(true)
 				_update_hurtbox_shape(true)
 
-	# footstep auto sound
-	if footstep_enabled:
+	# Reduce suppression timer for footsteps after exiting cling
+	if _suppress_footstep_after_exit_timer > 0.0:
+		_suppress_footstep_after_exit_timer = max(_suppress_footstep_after_exit_timer - delta, 0.0)
+
+	# footstep auto sound (suppressed while wall-cling or during short post-exit suppression)
+	if footstep_enabled and not _is_wall_clinging and _suppress_footstep_after_exit_timer <= 0.0:
 		if _footstep_timer > 0.0:
 			_footstep_timer = max(_footstep_timer - delta, 0.0)
 		if (state == State.WALK or state == State.RUN) and direction != Vector2.ZERO:
@@ -351,6 +412,9 @@ func _process(delta: float) -> void:
 				_footstep_timer = interval
 		else:
 			_footstep_timer = 0.0
+	else:
+		# while suppressed, keep timer zero so no footsteps appear when leaving state quickly
+		_footstep_timer = 0.0
 
 	# input update
 	direction.x = Input.get_action_strength("right") - Input.get_action_strength("left")
@@ -358,6 +422,15 @@ func _process(delta: float) -> void:
 	if direction != Vector2.ZERO:
 		facing = direction.normalized()
 		_set_direction_immediate()
+
+	# wall cling input: try enter when pressing action
+	if Input.is_action_just_pressed("wall_cling"):
+		# only enter if _can_wall_cling
+		if _can_wall_cling():
+			var dir = _get_wall_cling_direction()
+			if dir != Vector2.ZERO:
+				_enter_wall_cling(dir)
+
 	if Input.is_action_just_pressed("weapon_swap"):
 		_toggle_mode()
 	if Input.is_action_just_pressed("attack"):
@@ -377,12 +450,16 @@ func _process(delta: float) -> void:
 			get_tree().current_scene.add_child(sa)
 			_sound_emit_cooldown_timer = sound_emit_cooldown_time
 
-	# state updates (don't change during punch)
-	if state != State.PUNCH:
+	# state updates (don't change during punch or while wall clinging)
+	if state != State.PUNCH and not _is_wall_clinging:
 		if _set_state():
 			_select_muzzle_for_cardinal(cardinal_direction)
 			_update_animation(true)
 			_update_hurtbox_shape(true)
+
+	# if wall-clinging, handle cling-specific input & behavior
+	if _is_wall_clinging:
+		_handle_wall_cling_input()
 
 	# end punch
 	if state == State.PUNCH and not _punch_auto_end_by_anim and _punch_timer <= 0.0:
@@ -390,6 +467,33 @@ func _process(delta: float) -> void:
 	_update_animation()
 
 func _physics_process(delta: float) -> void:
+	# ถ้า wall-clinging: อนุญาตให้เคลื่อนที่เฉพาะแนวที่ขนานกับผนัง (tangent)
+	if _is_wall_clinging:
+		# ความเร็วเป้าหมายตาม state (walk/run/crouch ฯลฯ)
+		var target_speed: float = _get_speed_for_state()
+		var input_dir: Vector2 = direction.normalized() if direction != Vector2.ZERO else Vector2.ZERO
+
+		# กำหนด tangent ของผนัง (ทิศทางที่อนุญาตให้เดินขณะ cling)
+		# ถ้า wall_dir = LEFT/RIGHT => tangent = UP/DOWN (เคลื่อนในแกน Y)
+		# ถ้า wall_dir = UP/DOWN => tangent = LEFT/RIGHT (เคลื่อนในแกน X)
+		var tangent: Vector2 = Vector2.ZERO
+		if _wall_cling_dir != Vector2.ZERO:
+			tangent = Vector2(-_wall_cling_dir.y, _wall_cling_dir.x) # rotate 90deg
+
+		# โปรเจ็กต์ input ไปตาม tangent เพื่อรู้ทิศและขนาดการเคลื่อนที่ที่ต้องการ
+		var proj: float = 0.0
+		if tangent != Vector2.ZERO and input_dir != Vector2.ZERO:
+			proj = input_dir.dot(tangent) # ค่า -1..1 (ลบ=ทิศหนึ่ง บวก=อีกทิศ)
+
+		# ตั้งความเร็วเป้าหมายเฉพาะแนว tangent
+		var target_vel: Vector2 = tangent * proj * target_speed
+
+		# ใช้การเร่งแบบเดิมเพื่อความนุ่มนวล
+		velocity = velocity.move_toward(target_vel, ACCELERATION * delta)
+		move_and_slide()
+		return
+
+	# ปกติ (ไม่ cling) -> พฤติกรรมเดิม
 	var target_speed: float = _get_speed_for_state()
 	var input_dir: Vector2 = direction.normalized()
 	var speed_mult: float = clamp(punch_move_multiplier, 0.0, 1.0) if state == State.PUNCH else 1.0
@@ -407,7 +511,9 @@ func _set_direction_immediate() -> void:
 	)
 	if new_dir != cardinal_direction:
 		cardinal_direction = new_dir
-		animated_sprite.scale.x = -1 if cardinal_direction == Vector2.LEFT else 1
+		# ไม่ให้ flip sprite ขณะ wall_cling (ป้องกันการพลิกเมื่อเพิ่งเข้า cling)
+		if not _is_wall_clinging:
+			animated_sprite.scale.x = -1 if cardinal_direction == Vector2.LEFT else 1
 		_select_muzzle_for_cardinal(cardinal_direction)
 
 func _set_direction() -> bool:
@@ -418,38 +524,12 @@ func _set_direction() -> bool:
 # --------------------------------------------------------------------
 # _set_state using virtual posture flags; updates visuals/collisions
 # --------------------------------------------------------------------
-func _set_state(force: bool=false) -> bool:
-	if _crouch_pending_stand and not force and (state == State.SNEAK or state == State.CRAWL):
-		return false
-	if state == State.PUNCH and not force:
-		return false
-
-	var new_state: int
-	if _want_crawl:
-		new_state = State.CRAWL
-	elif _want_sneak:
-		new_state = State.SNEAK
-	else:
-		new_state = (
-			State.RUN if Input.is_action_pressed("run") and direction != Vector2.ZERO else
-			State.IDLE if direction == Vector2.ZERO else State.WALK
-		)
-
-	if new_state == state:
-		return false
-
-	state = new_state
-
-	_select_muzzle_for_cardinal(cardinal_direction)
-	_update_animation(true)
-	_update_hurtbox_shape(true)
-
-	return true
-
-# -------------------------------------------------------------
-# Apply posture toggle request (tap vs hold) - MGS style
-# -------------------------------------------------------------
 func _apply_posture_toggle_request() -> void:
+	# ถ้าอยู่ใน wall cling ห้ามเปลี่ยน posture ใด ๆ
+	if _is_wall_clinging:
+		_posture_toggle_request = 0
+		return
+
 	if state == State.PUNCH:
 		_posture_toggle_request = 0
 		return
@@ -480,6 +560,38 @@ func _apply_posture_toggle_request() -> void:
 
 	_set_state()
 	_posture_toggle_request = 0
+
+func _set_state(force: bool=false) -> bool:
+	# ถ้า wall-clinging ห้ามเปลี่ยน state ยกเว้นถูกบังคับด้วย force
+	if _is_wall_clinging and not force:
+		return false
+
+	if _crouch_pending_stand and not force and (state == State.SNEAK or state == State.CRAWL):
+		return false
+	if state == State.PUNCH and not force:
+		return false
+
+	var new_state: int
+	if _want_crawl:
+		new_state = State.CRAWL
+	elif _want_sneak:
+		new_state = State.SNEAK
+	else:
+		new_state = (
+			State.RUN if Input.is_action_pressed("run") and direction != Vector2.ZERO else
+			State.IDLE if direction == Vector2.ZERO else State.WALK
+		)
+
+	if new_state == state:
+		return false
+
+	state = new_state
+
+	_select_muzzle_for_cardinal(cardinal_direction)
+	_update_animation(true)
+	_update_hurtbox_shape(true)
+
+	return true
 
 # -------------------------------------------------------------
 
@@ -647,6 +759,24 @@ func _update_animation(force: bool=false) -> void:
 				animated_sprite.animation = _temp_anim_name
 				animated_sprite.play()
 		return
+	# If wall-clinging, prefer wall animations (explicit left/right/up/down)
+	if _is_wall_clinging:
+		var anim_name = ""
+		if _wall_cling_dir == Vector2.LEFT:
+			anim_name = "wall_left"
+		elif _wall_cling_dir == Vector2.RIGHT:
+			anim_name = "wall_right"
+		elif _wall_cling_dir == Vector2.UP:
+			anim_name = "wall_up"
+		elif _wall_cling_dir == Vector2.DOWN:
+			anim_name = "wall_down"
+		if anim_name != "" and animated_sprite.sprite_frames != null and animated_sprite.sprite_frames.has_animation(anim_name):
+			if _current_anim != anim_name or force:
+				_current_anim = anim_name
+				animated_sprite.animation = anim_name
+				animated_sprite.play()
+			return
+
 	var candidates: Array = _choose_animation_candidates()
 	for name in candidates:
 		if animated_sprite.sprite_frames != null and animated_sprite.sprite_frames.has_animation(name):
@@ -683,6 +813,212 @@ func _get_speed_for_state() -> float:
 		State.IDLE: return 0.0
 		_:
 			return MAX_SPEED
+
+# ========== WALL CLING: detection & behavior functions ==========
+# Return true if wall cling is allowed in current context (mode, state, etc.)
+func _can_wall_cling() -> bool:
+	if not wall_cling_enabled:
+		return false
+	# allow both NORMAL and GUN modes (previously required NORMAL only)
+	if not (mode == Mode.NORMAL or mode == Mode.GUN):
+		return false
+	# don't allow when punching
+	if state == State.PUNCH:
+		return false
+	# require that current state is in allowed list (editor configurable)
+	var ok_state: bool = false
+	for s in wall_cling_allowed_states:
+		if s == state:
+			ok_state = true
+			break
+	if not ok_state:
+		return false
+	# must be touching a wall via raycasts
+	if _get_wall_cling_direction() == Vector2.ZERO:
+		return false
+	return true
+
+# Return a cardinal Vector2 indicating wall normal direction (LEFT/RIGHT/UP/DOWN) when touching; Vector2.ZERO otherwise.
+func _get_wall_cling_direction() -> Vector2:
+	# prefer the direction the player is facing if multiple raycasts hit
+	var hits: Array = []
+	if rc_wall_left != null and rc_wall_left.is_colliding():
+		hits.append(Vector2.LEFT)
+	if rc_wall_right != null and rc_wall_right.is_colliding():
+		hits.append(Vector2.RIGHT)
+	if rc_wall_up != null and rc_wall_up.is_colliding():
+		hits.append(Vector2.UP)
+	if rc_wall_down != null and rc_wall_down.is_colliding():
+		hits.append(Vector2.DOWN)
+	if hits.size() == 0:
+		return Vector2.ZERO
+	# if only one hit, return that
+	if hits.size() == 1:
+		return hits[0]
+	# if multiple, choose hit most aligned with facing; fallback to first
+	var best = hits[0]
+	var best_dot = facing.dot(best)
+	for h in hits:
+		var d = facing.dot(h)
+		if d > best_dot:
+			best_dot = d
+			best = h
+	return best
+
+# Enter wall cling state. dir must be a cardinal Vector2 (LEFT/RIGHT/UP/DOWN)
+func _enter_wall_cling(dir: Vector2) -> void:
+	# เข้าสู่ wall cling: ป้องกัน redundant calls
+	if _is_wall_clinging:
+		return
+	if dir == Vector2.ZERO:
+		return
+
+	# ยกเลิกการเปลี่ยน posture ทั้งหมดยาม cling
+	_posture_toggle_request = 0
+	_want_sneak = false
+	_want_crawl = false
+	_crouch_pending_stand = false
+	_crouch_delay_timer = 0.0
+
+	_is_wall_clinging = true
+	_wall_cling_dir = dir
+	# ตั้ง state เพื่อให้ animation/system รู้ว่าเรา cling
+	state = State.WALL_CLING
+	# freeze velocity
+	velocity = Vector2.ZERO
+	# suppress footsteps (store previous value to restore later)
+	_saved_footstep_enabled = footstep_enabled
+	footstep_enabled = false
+
+	# ตั้งค่า scale ให้เป็นค่า default (ไม่ flip) เพื่อหลีกเลี่ยงการพลิก sprite เมื่อเพิ่งเข้า cling
+	# เราใช้อนิเมชันแยกเป็น "wall_left"/"wall_right" ดังนั้นไม่ต้อง flip
+	if animated_sprite != null:
+		animated_sprite.scale.x = 1
+
+	# play wall animation immediately
+	_update_animation(true)
+	# emit signal
+	emit_signal("wall_cling_started", dir)
+	# cancel any existing peek tween
+	if _peek_tween != null and is_instance_valid(_peek_tween):
+		_peek_tween.kill()
+		_peek_tween = null
+
+# Handle input while wall clinging: peek toward wall or push-off
+func _handle_wall_cling_input() -> void:
+	# read directional intent from input/action strengths (same way as movement)
+	var input_vec = Vector2(
+		Input.get_action_strength("right") - Input.get_action_strength("left"),
+		Input.get_action_strength("down") - Input.get_action_strength("up")
+	)
+	if input_vec == Vector2.ZERO:
+		# no input -> stop peek if active
+		_stop_peek()
+		return
+
+	# normalize to get direction intent
+	var intent = input_vec.normalized()
+	# dot with wall dir: positive => pressing toward wall, negative => pressing away
+	var d = intent.dot(_wall_cling_dir)
+	# threshold: when pressing sufficiently toward or away
+	var threshold = 0.5
+	if d < -threshold:
+		# pressing away from wall -> exit with push
+		_exit_wall_cling(true)
+	elif d > threshold:
+		# pressing toward wall -> start peek (camera shift)
+		_start_peek(_wall_cling_dir)
+	else:
+		_stop_peek()
+
+# Exit wall cling. If push==true, apply velocity away from wall to "step off".
+func _exit_wall_cling(push: bool=false) -> void:
+	if not _is_wall_clinging:
+		return
+	_is_wall_clinging = false
+
+	# restore footstep setting (will be used after we optionally suppress immediate footstep)
+	footstep_enabled = _saved_footstep_enabled
+
+	# stop peek and tween
+	_stop_peek()
+
+	# set state back to a normal state (try set_state)
+	_set_state(true)
+
+	# on push: apply a small instantaneous velocity away from the wall
+	if push:
+		# set a velocity that pushes player away
+		velocity = _wall_cling_dir * -wall_cling_push_speed
+		# small position offset to avoid re-detecting wall in same frame (optional)
+		var push_offset = _wall_cling_dir * -wall_cling_push_distance
+		global_position += push_offset
+
+		# set facing/cardinal to match the push direction (away from wall) so animation faces forward
+		var move_dir = velocity.normalized() if velocity.length() > 0.0 else -_wall_cling_dir
+		if move_dir.x != 0 and abs(move_dir.x) >= abs(move_dir.y):
+			cardinal_direction = Vector2.LEFT if move_dir.x < 0 else Vector2.RIGHT
+		else:
+			cardinal_direction = Vector2.UP if move_dir.y < 0 else Vector2.DOWN
+
+		# allow sprite flipping now (ensure scale matches cardinal)
+		if animated_sprite != null:
+			animated_sprite.scale.x = -1 if cardinal_direction == Vector2.LEFT else 1
+
+		# suppress footstep spawn for a short duration so push-off doesn't emit sound
+		_suppress_footstep_after_exit_timer = footstep_exit_suppress_time
+		# also set _footstep_timer so immediate generation is blocked
+		_footstep_timer = max(footstep_interval_walk, footstep_interval_run)
+	else:
+		# no push: try to preserve facing based on input if any
+		if direction != Vector2.ZERO:
+			facing = direction.normalized()
+			_set_direction_immediate()
+
+	# reset wall dir
+	_wall_cling_dir = Vector2.ZERO
+
+	# update animation and hurtbox as we left WALL_CLING
+	_select_muzzle_for_cardinal(cardinal_direction)
+	_update_animation(true)
+	_update_hurtbox_shape(true)
+	emit_signal("wall_cling_ended")
+
+# Start camera peek toward wall_dir (cardinal). Uses Tween for smooth motion.
+func _start_peek(wall_dir: Vector2) -> void:
+	if cam == null:
+		return
+	# compute target offset relative to camera's parent
+	var peek_vector = wall_dir * wall_cling_peek_offset
+	# if camera is direct child of player, tween its local position
+	if cam.get_parent() == self:
+		# kill existing tween
+		if _peek_tween != null and is_instance_valid(_peek_tween):
+			_peek_tween.kill()
+		_peek_tween = get_tree().create_tween()
+		_peek_tween.tween_property(cam, "position", peek_vector, wall_cling_camera_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	else:
+		# camera is elsewhere: tween global position
+		if _peek_tween != null and is_instance_valid(_peek_tween):
+			_peek_tween.kill()
+		_peek_tween = get_tree().create_tween()
+		var target_global = cam.global_position + peek_vector
+		_peek_tween.tween_property(cam, "global_position", target_global, wall_cling_camera_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+# Stop peek and return camera to neutral
+func _stop_peek() -> void:
+	if cam == null:
+		return
+	if _peek_tween != null and is_instance_valid(_peek_tween):
+		_peek_tween.kill()
+		_peek_tween = null
+	# tween back to origin
+	if cam.get_parent() == self:
+		_peek_tween = get_tree().create_tween()
+		_peek_tween.tween_property(cam, "position", Vector2.ZERO, wall_cling_camera_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	else:
+		_peek_tween = get_tree().create_tween()
+		_peek_tween.tween_property(cam, "global_position", get_viewport().get_camera_2d().global_position, wall_cling_camera_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 # ========== HURT / DAMAGE HANDLING ==========
 func _on_hurtbox_area_entered(area: Area2D) -> void:
@@ -738,6 +1074,9 @@ func take_damage(amount: int, source: Node = null) -> void:
 	_blink_accum = 0.0
 	_blink_on = true
 	_apply_modulate()
+	# leaving wall cling when hurt
+	if _is_wall_clinging:
+		_exit_wall_cling(false)
 	if has_node("HurtSound"):
 		var hs = get_node("HurtSound")
 		if hs != null and hs.has_method("play"):
