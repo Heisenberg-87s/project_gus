@@ -1,13 +1,8 @@
-[gd_scene load_steps=17 format=4 uid="uid://y1wdry2cvq3j"]
+[gd_scene load_steps=12 format=4 uid="uid://y1wdry2cvq3j"]
 
 [ext_resource type="Texture2D" uid="uid://1etdfknemrkf" path="res://assets/MGSGB Tileset.png" id="2_1ai7p"]
 [ext_resource type="PackedScene" uid="uid://2jfjcm6ebujw" path="res://player/player.tscn" id="3_qsy1e"]
 [ext_resource type="PackedScene" uid="uid://v1cx2pek8gbo" path="res://enemy/enemy.tscn" id="4_6onxe"]
-[ext_resource type="PackedScene" uid="uid://kml0362lhw4h" path="res://health_bar.tscn" id="5_p5rew"]
-[ext_resource type="PackedScene" uid="uid://b5uucg08n6mr3" path="res://ui/caution.tscn" id="6_e21mu"]
-[ext_resource type="PackedScene" uid="uid://cydk53nqabmss" path="res://ui/game_over_panel.tscn" id="7_ehwsq"]
-[ext_resource type="PackedScene" uid="uid://cd1fmymmeibu0" path="res://reloadui.tscn" id="8_vwj8p"]
-[ext_resource type="PackedScene" uid="uid://lljyty4qe7fo" path="res://ui/pause_menu.tscn" id="9_txujg"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ao81e"]
 texture = ExtResource("2_1ai7p")
@@ -209,7 +204,7 @@ debug_color = Color(0.106196724, 0.6482863, 0, 0.41960785)
 [node name="Player" parent="." instance=ExtResource("3_qsy1e")]
 position = Vector2(43, 253)
 
-[node name="Camera2D2" type="Camera2D" parent="Player"]
+[node name="Camera2D" type="Camera2D" parent="Player"]
 zoom = Vector2(1.5, 1.5)
 limit_left = 0
 limit_top = 0
@@ -289,23 +284,6 @@ autostart = true
 
 [node name="p1" type="Marker2D" parent="Enemy4/PatrolPoints"]
 position = Vector2(-10.49, 0)
-
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
-
-[node name="Health_bar" parent="CanvasLayer" instance=ExtResource("5_p5rew")]
-
-[node name="caution" parent="CanvasLayer" instance=ExtResource("6_e21mu")]
-
-[node name="GameOverUI" parent="CanvasLayer" instance=ExtResource("7_ehwsq")]
-visible = false
-
-[node name="Control" parent="CanvasLayer" instance=ExtResource("8_vwj8p")]
-offset_left = 3.0
-offset_top = 5.0
-offset_right = 3.0
-offset_bottom = 5.0
-
-[node name="PauseMenu" parent="CanvasLayer" instance=ExtResource("9_txujg")]
 
 [connection signal="timeout" from="Enemy/NavTimer" to="Enemy" method="_on_nav_timer_timeout"]
 [connection signal="timeout" from="Enemy2/NavTimer" to="Enemy2" method="_on_nav_timer_timeout"]

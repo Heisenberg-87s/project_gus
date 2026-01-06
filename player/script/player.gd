@@ -4,6 +4,9 @@ class_name player
 enum Mode { NORMAL, GUN }
 enum State { IDLE, WALK, RUN, SNEAK, CRAWL, PUNCH, WALL_CLING } # เพิ่ม WALL_CLING
 
+# for scene manager
+
+
 # ===== MOVEMENT CONFIG =====
 const MAX_SPEED: float = 150.0
 const ACCELERATION: float = 1400.0
@@ -181,6 +184,8 @@ var _want_crawl: bool = false
 var _hurtbox_original_pos: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
+	print("[Player] _ready called in scene:", get_tree().current_scene.name)
+	call_deferred("_apply_scene_manager_spawn")
 	add_to_group("player")
 	# If Camera2D wasn't set as a child named Camera2D, try to find current viewport camera
 	if cam == null:
@@ -1191,3 +1196,5 @@ func _on_area_exited_any(area: Area2D) -> void:
 
 func is_in_grass() -> bool:
 	return _grass_areas.size() > 0
+
+# ===== For Scene Manager ========

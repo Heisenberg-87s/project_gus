@@ -1,0 +1,31 @@
+[gd_scene load_steps=7 format=3 uid="uid://c0rkexsn8u0vd"]
+
+[ext_resource type="PackedScene" uid="uid://c1dfu181dvbqk" path="res://Levels/lobby_1t.tscn" id="1_ii4o2"]
+[ext_resource type="PackedScene" uid="uid://kml0362lhw4h" path="res://health_bar.tscn" id="2_p3lki"]
+[ext_resource type="PackedScene" uid="uid://b5uucg08n6mr3" path="res://ui/caution.tscn" id="3_xvsls"]
+[ext_resource type="PackedScene" uid="uid://cydk53nqabmss" path="res://ui/game_over_panel.tscn" id="4_uhcv8"]
+[ext_resource type="PackedScene" uid="uid://cd1fmymmeibu0" path="res://reloadui.tscn" id="5_6ckdd"]
+[ext_resource type="PackedScene" uid="uid://lljyty4qe7fo" path="res://ui/pause_menu.tscn" id="6_8kmjy"]
+
+[node name="Gameplay" type="Node2D"]
+
+[node name="LevelHolder" type="Node2D" parent="."]
+
+[node name="Lobby1T" parent="LevelHolder" instance=ExtResource("1_ii4o2")]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Health_bar" parent="CanvasLayer" instance=ExtResource("2_p3lki")]
+
+[node name="caution" parent="CanvasLayer" instance=ExtResource("3_xvsls")]
+
+[node name="GameOverUI" parent="CanvasLayer" instance=ExtResource("4_uhcv8")]
+visible = false
+
+[node name="Control" parent="CanvasLayer" instance=ExtResource("5_6ckdd")]
+offset_left = 3.0
+offset_top = 5.0
+offset_right = 3.0
+offset_bottom = 5.0
+
+[node name="PauseMenu" parent="CanvasLayer" instance=ExtResource("6_8kmjy")]

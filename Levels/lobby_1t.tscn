@@ -1,29 +1,12 @@
-[gd_scene load_steps=23 format=4 uid="uid://c1dfu181dvbqk"]
+[gd_scene load_steps=19 format=4 uid="uid://c1dfu181dvbqk"]
 
 [ext_resource type="Texture2D" uid="uid://1etdfknemrkf" path="res://assets/MGSGB Tileset.png" id="1_edqoi"]
 [ext_resource type="Texture2D" uid="uid://bcwwxc1y27goe" path="res://assets/spritesheet_tiles.png" id="2_mokiq"]
 [ext_resource type="PackedScene" uid="uid://2jfjcm6ebujw" path="res://player/player.tscn" id="3_8mrt4"]
 [ext_resource type="Texture2D" uid="uid://grejgceomewx" path="res://assets/48x48 trees.png" id="3_qulnn"]
+[ext_resource type="Script" uid="uid://dijukxubibuxs" path="res://Levels/DoorArea.gd" id="4_1shrj"]
+[ext_resource type="PackedScene" uid="uid://y1wdry2cvq3j" path="res://Levels/level_1t.tscn" id="5_j03hq"]
 [ext_resource type="PackedScene" uid="uid://v1cx2pek8gbo" path="res://enemy/enemy.tscn" id="5_qulnn"]
-[ext_resource type="PackedScene" uid="uid://kml0362lhw4h" path="res://health_bar.tscn" id="7_tfvjw"]
-[ext_resource type="PackedScene" uid="uid://b5uucg08n6mr3" path="res://ui/caution.tscn" id="8_07n6k"]
-[ext_resource type="PackedScene" uid="uid://cydk53nqabmss" path="res://ui/game_over_panel.tscn" id="9_qwg1r"]
-[ext_resource type="PackedScene" uid="uid://cd1fmymmeibu0" path="res://reloadui.tscn" id="10_fdidu"]
-[ext_resource type="PackedScene" uid="uid://lljyty4qe7fo" path="res://ui/pause_menu.tscn" id="11_6jl1s"]
-
-[sub_resource type="GDScript" id="GDScript_5eq0t"]
-script/source = "extends Node2D
-
-func _ready() -> void:
-	pass
-
-func _process(delta: float) -> void:
-	pass
-	
-func _on_invisible_wall_body_entered(body):
-	if body is player:
-		get_tree().change_scene_to_file(\"res://Level/level_1t.tscn\")
-"
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_qulnn"]
 texture = ExtResource("1_edqoi")
@@ -750,7 +733,6 @@ outlines = Array[PackedVector2Array]([PackedVector2Array(0, 832, 1943, 832, 1946
 size = Vector2(20, 102.25)
 
 [node name="Lobby1T" type="Node2D"]
-script = SubResource("GDScript_5eq0t")
 
 [node name="Wall" type="TileMapLayer" parent="."]
 scale = Vector2(3, 3)
@@ -768,7 +750,6 @@ tile_map_data = PackedByteArray("AAAAAAAAAgAAAAAAAAABAAAAAgABAAAAAAACAAAAAgABAAA
 tile_set = SubResource("TileSet_tfvjw")
 
 [node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
-visible = false
 navigation_polygon = SubResource("NavigationPolygon_4hsql")
 
 [node name="Wall" type="StaticBody2D" parent="NavigationRegion2D" groups=["walls"]]
@@ -795,14 +776,21 @@ polygon = PackedVector2Array(1417.6595, 103.40425, 1465.6595, 103.40425, 1465.65
 [node name="belletwall2" type="CollisionPolygon2D" parent="NavigationRegion2D/Bullet Wall"]
 polygon = PackedVector2Array(1896, 528, 1944, 528, 1944, 720, 2064, 720, 2064, 744, 1896, 744)
 
-[node name="Invisible Wall" type="Area2D" parent="NavigationRegion2D" groups=["walls"]]
+[node name="DoorArea" type="Area2D" parent="NavigationRegion2D" groups=["walls"]]
 position = Vector2(1996, 480)
 collision_mask = 16
+script = ExtResource("4_1shrj")
+target_scene = ExtResource("5_j03hq")
+target_spawn_id = "DoorWest"
+target_player_facing = 3
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="NavigationRegion2D/Invisible Wall"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="NavigationRegion2D/DoorArea"]
 position = Vector2(5, 0)
 shape = SubResource("RectangleShape2D_1vg4i")
 debug_color = Color(0.106196724, 0.6482863, 0, 0.41960785)
+
+[node name="DoorEast" type="Marker2D" parent="NavigationRegion2D/DoorArea"]
+position = Vector2(-78, 0)
 
 [node name="Player" parent="." instance=ExtResource("3_8mrt4")]
 position = Vector2(978, 446)
@@ -847,23 +835,6 @@ autostart = true
 [node name="p1" type="Marker2D" parent="Enemy2/PatrolPoints"]
 position = Vector2(-10, 0)
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
-
-[node name="Health_bar" parent="CanvasLayer" instance=ExtResource("7_tfvjw")]
-
-[node name="caution" parent="CanvasLayer" instance=ExtResource("8_07n6k")]
-
-[node name="GameOverUI" parent="CanvasLayer" instance=ExtResource("9_qwg1r")]
-visible = false
-
-[node name="Control" parent="CanvasLayer" instance=ExtResource("10_fdidu")]
-offset_left = 3.0
-offset_top = 5.0
-offset_right = 3.0
-offset_bottom = 5.0
-
-[node name="PauseMenu" parent="CanvasLayer" instance=ExtResource("11_6jl1s")]
-
-[connection signal="body_entered" from="NavigationRegion2D/Invisible Wall" to="." method="_on_invisible_wall_body_entered"]
+[connection signal="body_entered" from="NavigationRegion2D/DoorArea" to="." method="_on_invisible_wall_body_entered"]
 [connection signal="timeout" from="Enemy/NavTimer" to="Enemy" method="_on_nav_timer_timeout"]
 [connection signal="timeout" from="Enemy2/NavTimer" to="Enemy2" method="_on_nav_timer_timeout"]
