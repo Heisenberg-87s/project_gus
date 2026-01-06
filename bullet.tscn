@@ -26,7 +26,7 @@ radius = 2.0
 y_sort_enabled = true
 scale = Vector2(4, 4)
 collision_layer = 2
-collision_mask = 32777
+collision_mask = 34824
 script = ExtResource("1_v8qja")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]

@@ -125,7 +125,7 @@ tile_set = SubResource("TileSet_eptb0")
 navigation_polygon = SubResource("NavigationPolygon_c3mb4")
 
 [node name="Wall" type="StaticBody2D" parent="NavigationRegion2D" groups=["walls"]]
-collision_mask = 22
+collision_mask = 20
 physics_material_override = SubResource("PhysicsMaterial_h1rrk")
 
 [node name="Wall1" type="CollisionPolygon2D" parent="NavigationRegion2D/Wall"]
@@ -140,7 +140,7 @@ shape = SubResource("RectangleShape2D_ef41s")
 polygon = PackedVector2Array(336, 384, 432, 384, 432, 576, 0, 576, 0, 288, 48, 288, 48, 480, 336, 480)
 
 [node name="Pillar" type="StaticBody2D" parent="NavigationRegion2D" groups=["walls"]]
-collision_mask = 22
+collision_mask = 20
 physics_material_override = SubResource("PhysicsMaterial_h1rrk")
 
 [node name="Pillar1" type="CollisionPolygon2D" parent="NavigationRegion2D/Pillar"]
@@ -160,7 +160,7 @@ polygon = PackedVector2Array(768, 240, 864, 240, 864, 432, 768, 432)
 
 [node name="Bullet Wall" type="StaticBody2D" parent="NavigationRegion2D" groups=["walls"]]
 collision_layer = 2048
-collision_mask = 20
+collision_mask = 22
 physics_material_override = SubResource("PhysicsMaterial_h1rrk")
 
 [node name="Pillar1" type="CollisionPolygon2D" parent="NavigationRegion2D/Bullet Wall"]
@@ -183,7 +183,6 @@ position = Vector2(192, 192)
 polygon = PackedVector2Array(792, 240, 840, 240, 840, 432, 792, 432)
 
 [node name="bulletwall1" type="CollisionPolygon2D" parent="NavigationRegion2D/Bullet Wall"]
-visible = false
 position = Vector2(478.34042, 40.595745)
 polygon = PackedVector2Array(-454.34042, -16.595745, -118.34042, -16.595745, -118.34042, 175.40425, -70.34042, 175.40425, -70.34042, -16.595745, 313.68283, -16.595745, 313.65958, 31.404255, 697.65955, 31.404255, 697.65955, 583.40424, 313.65958, 583.40424, 313.65958, 631.40424, -478.34042, 631.40424, -478.34042, 655.40424, 361.65958, 655.40424, 361.65958, 607.40424, 745.65955, 607.40424, 745.65955, 31.404255, 745.65955, 7.404255, 337.65958, 7.404255, 337.65958, -40.595745, -478.34042, -40.595745, -478.34042, 79.40425, -454.34042, 79.40425)
 

@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://b66pwp5x3y8k3"
+path="res://.godot/imported/43_Snake Eater.mp3-1e3e2c44b7ca2b88e207b76abe8e5bcc.mp3str"
+
+[deps]
+
+source_file="res://assets/audio/43_Snake Eater.mp3"
+dest_files=["res://.godot/imported/43_Snake Eater.mp3-1e3e2c44b7ca2b88e207b76abe8e5bcc.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
