@@ -21,7 +21,6 @@ RichTextLabel/font_sizes/normal_font_size = 23
 
 [node name="PauseMenu" type="Control"]
 process_mode = 3
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -80,7 +79,7 @@ layout_mode = 2
 
 [node name="Save" type="Button" parent="PanelContainer/VBoxContainer/PanelContainer2"]
 layout_mode = 2
-text = " Save"
+text = " Save (Not Working)"
 alignment = 0
 
 [node name="PanelContainer3" type="PanelContainer" parent="PanelContainer/VBoxContainer"]
@@ -88,7 +87,15 @@ layout_mode = 2
 
 [node name="Load" type="Button" parent="PanelContainer/VBoxContainer/PanelContainer3"]
 layout_mode = 2
-text = " Load"
+text = " Load (Not Working)"
+alignment = 0
+
+[node name="PanelContainer5" type="PanelContainer" parent="PanelContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Title_screen" type="Button" parent="PanelContainer/VBoxContainer/PanelContainer5"]
+layout_mode = 2
+text = "Go to TItle Screen"
 alignment = 0
 
 [connection signal="pressed" from="PanelContainer/VBoxContainer/PanelContainer/Resume" to="." method="_on_button_pressed"]
@@ -96,3 +103,4 @@ alignment = 0
 [connection signal="pressed" from="PanelContainer/VBoxContainer/PanelContainer4/Restart" to="." method="_on_restart_pressed"]
 [connection signal="pressed" from="PanelContainer/VBoxContainer/PanelContainer2/Save" to="." method="_on_save_pressed"]
 [connection signal="pressed" from="PanelContainer/VBoxContainer/PanelContainer3/Load" to="." method="_on_load_pressed"]
+[connection signal="pressed" from="PanelContainer/VBoxContainer/PanelContainer5/Title_screen" to="." method="_on_title_screen_pressed"]

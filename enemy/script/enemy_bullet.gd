@@ -4,7 +4,7 @@ extends Area2D
 @export var speed: float = 400.0
 @export var lifetime: float = 5.0
 @export var damage: int = 20
-@export var bullet_collision_mask: int = 1
+@export var bullet_collision_mask: int = 12
 
 # internal motion vars
 var direction: Vector2 = Vector2.RIGHT

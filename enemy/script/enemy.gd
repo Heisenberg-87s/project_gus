@@ -11,6 +11,9 @@ class_name Enemy
 @export var loop_patrol: bool = true
 @export var ping_patrol: bool = false
 
+# Facing option for when reaching the latest patrol point
+enum PatrolFinishFacing { AUTO = 0, UP = 1, DOWN = 2, LEFT = 3, RIGHT = 4 }
+@export var patrol_finish_facing: PatrolFinishFacing = PatrolFinishFacing.AUTO
 
 # ตัวช่วยสถานะ SEARCH (compat layer — เราใช้ EVASION แทน SEARCH)
 var _search_scan_cooldown: float = 5.0
@@ -23,7 +26,7 @@ var _search_scan_dir_timer: float = 0.45
 # -----------------------
 # การตั้งค่าการมอง/การตรวจจับ
 # -----------------------
-const LAYER_WALL: int = (1 << 0) | (1 << 7)
+const LAYER_WALL: int = (1 << 0) | (1 << 7) | (1 << 11)
 
 @export var sight_distance: float = 300.0
 @export var sight_fov_deg: float = 120.0
@@ -42,7 +45,7 @@ var muzzle: Marker2D = null
 # Combat tuning
 @export var combat_pause_duration: float = 0.6
 @export var combat_sight_multiplier: float = 1.5
-@export var combat_move_speed: float = 160.0
+@export var combat_move_speed: float = 220.0
 
 # Stealth interaction
 @export var stealth_sneak_multiplier: float = 0.6
@@ -299,6 +302,25 @@ func _patrol_state_process(delta: float) -> void:
 		global_position = target_pos
 		velocity = Vector2.ZERO
 		move_and_slide()
+
+		# If we've reached the latest patrol point (last index), optionally set facing
+		var is_last_point: bool = (_patrol_index == max(0, _patrol_points.size() - 1))
+		if is_last_point:
+			var facing_vec: Vector2 = Vector2.DOWN # default fallback
+			match patrol_finish_facing:
+				PatrolFinishFacing.AUTO:
+					facing_vec = Vector2.DOWN
+				PatrolFinishFacing.UP:
+					facing_vec = Vector2.UP
+				PatrolFinishFacing.DOWN:
+					facing_vec = Vector2.DOWN
+				PatrolFinishFacing.LEFT:
+					facing_vec = Vector2.LEFT
+				PatrolFinishFacing.RIGHT:
+					facing_vec = Vector2.RIGHT
+			_last_facing = facing_vec
+			_update_animation()
+
 		if _wait_timer <= 0.0:
 			_wait_timer = wait_time_at_point
 		_wait_timer -= delta

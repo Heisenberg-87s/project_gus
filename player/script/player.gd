@@ -4,9 +4,6 @@ class_name player
 enum Mode { NORMAL, GUN }
 enum State { IDLE, WALK, RUN, SNEAK, CRAWL, PUNCH, WALL_CLING } # เพิ่ม WALL_CLING
 
-# for scene manager
-
-
 # ===== MOVEMENT CONFIG =====
 const MAX_SPEED: float = 150.0
 const ACCELERATION: float = 1400.0
@@ -1197,4 +1194,57 @@ func _on_area_exited_any(area: Area2D) -> void:
 func is_in_grass() -> bool:
 	return _grass_areas.size() > 0
 
+
+# Return Vector2 facing
+func get_facing() -> Vector2:
+	return facing
+
+# Accept Vector2, apply facing, update sprite/animation
+func set_facing(dir: Vector2) -> void:
+	if dir == Vector2.ZERO:
+		return
+	facing = dir.normalized()
+	# Update sprite/animation accordingly (left/right flip, up/down animation state)
+	if has_node("Sprite"):
+		var s = $Sprite
+		# horizontal flip logic
+		if facing.x < 0:
+			s.flip_h = true
+		elif facing.x > 0:
+			s.flip_h = false
+	# handle up/down animation via AnimationPlayer or animator if present
+	if has_node("AnimationPlayer"):
+		var ap = $AnimationPlayer
+		# decide animation based on predominant axis
+		if abs(facing.x) >= abs(facing.y):
+			if facing.x < 0:
+				ap.play("walk_left")
+			else:
+				ap.play("walk_right")
+		else:
+			if facing.y < 0:
+				ap.play("walk_up")
+			else:
+				ap.play("walk_down")
+
+
 # ===== For Scene Manager ========
+# Utility method to allow Gameplay/Level to ask player to spawn at position directly
+func spawn_at(global_pos: Vector2, facing_dir: Vector2 = Vector2.ZERO) -> void:
+	global_position = global_pos
+	if facing_dir != Vector2.ZERO:
+		set_facing(facing_dir)
+
+# Optionally save/load state if you chose to instantiate player per-level
+func save_state() -> Dictionary:
+	return {
+		"facing": facing,
+		# add hp, inventory, etc.
+		}
+
+func load_state(data: Dictionary) -> void:
+		if data.has("facing"):
+			var f = data["facing"]
+			if f is Vector2:
+				set_facing(f)
+	# load other fields as needed

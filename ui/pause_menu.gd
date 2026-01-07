@@ -43,3 +43,8 @@ func _on_load_pressed() -> void:
 		print("Loaded scene: ", SaveManager.last_scene_path)
 	else:
 		print("Load failed: no save or could not load (error code: ", err, ").")
+
+
+func _on_title_screen_pressed() -> void:
+	_set_paused(false)
+	get_tree().change_scene_to_file("res://ui/main_menu.tscn")

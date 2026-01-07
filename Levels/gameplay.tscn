@@ -1,17 +1,37 @@
-[gd_scene load_steps=7 format=3 uid="uid://c0rkexsn8u0vd"]
+[gd_scene load_steps=8 format=3 uid="uid://c0rkexsn8u0vd"]
 
-[ext_resource type="PackedScene" uid="uid://c1dfu181dvbqk" path="res://Levels/lobby_1t.tscn" id="1_ii4o2"]
+[ext_resource type="Script" uid="uid://bgtorvuufrv62" path="res://Levels/gameplay.gd" id="1_xvsls"]
 [ext_resource type="PackedScene" uid="uid://kml0362lhw4h" path="res://health_bar.tscn" id="2_p3lki"]
+[ext_resource type="PackedScene" uid="uid://2jfjcm6ebujw" path="res://player/player.tscn" id="3_uhcv8"]
 [ext_resource type="PackedScene" uid="uid://b5uucg08n6mr3" path="res://ui/caution.tscn" id="3_xvsls"]
 [ext_resource type="PackedScene" uid="uid://cydk53nqabmss" path="res://ui/game_over_panel.tscn" id="4_uhcv8"]
 [ext_resource type="PackedScene" uid="uid://cd1fmymmeibu0" path="res://reloadui.tscn" id="5_6ckdd"]
 [ext_resource type="PackedScene" uid="uid://lljyty4qe7fo" path="res://ui/pause_menu.tscn" id="6_8kmjy"]
 
 [node name="Gameplay" type="Node2D"]
+script = ExtResource("1_xvsls")
+initial_level_scene_path = "res://Levels/lobby_1t.tscn"
 
 [node name="LevelHolder" type="Node2D" parent="."]
 
-[node name="Lobby1T" parent="LevelHolder" instance=ExtResource("1_ii4o2")]
+[node name="Player" parent="." instance=ExtResource("3_uhcv8")]
+position = Vector2(347, 384)
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+scale = Vector2(0.25, 0.25)
+zoom = Vector2(1.5, 1.5)
+limit_left = 0
+limit_top = 0
+limit_right = 2060
+limit_bottom = 1920
+drag_horizontal_enabled = true
+drag_vertical_enabled = true
+drag_left_margin = 0.05
+drag_top_margin = 0.1
+drag_right_margin = 0.05
+drag_bottom_margin = 0.05
+editor_draw_limits = true
+editor_draw_drag_margin = true
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -20,7 +40,6 @@
 [node name="caution" parent="CanvasLayer" instance=ExtResource("3_xvsls")]
 
 [node name="GameOverUI" parent="CanvasLayer" instance=ExtResource("4_uhcv8")]
-visible = false
 
 [node name="Control" parent="CanvasLayer" instance=ExtResource("5_6ckdd")]
 offset_left = 3.0

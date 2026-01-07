@@ -1,8 +1,17 @@
-[gd_scene load_steps=4 format=3 uid="uid://bc83xu7p5onom"]
+[gd_scene load_steps=7 format=3 uid="uid://bc83xu7p5onom"]
 
 [ext_resource type="Script" uid="uid://bxa4k8ggvcc3r" path="res://ui/main_menu.gd" id="1_0dkrt"]
-[ext_resource type="Texture2D" uid="uid://c8i30j4kf2wua" path="res://GG.png" id="2_wk0pr"]
+[ext_resource type="Texture2D" uid="uid://ci3iqmdjql5rg" path="res://assets/G.jpeg" id="2_rmr83"]
+[ext_resource type="Texture2D" uid="uid://8od4rvwi14e1" path="res://assets/GUINEA_GEARW.png" id="2_wk0pr"]
 [ext_resource type="AudioStream" uid="uid://b66pwp5x3y8k3" path="res://assets/audio/43_Snake Eater.mp3" id="3_wk0pr"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rmr83"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+
+[sub_resource type="Theme" id="Theme_8uxxo"]
+Button/colors/font_color = Color(1, 1, 1, 1)
+Button/font_sizes/font_size = 35
+Button/styles/normal = SubResource("StyleBoxFlat_rmr83")
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -19,6 +28,24 @@ offset_right = 1280.0
 offset_bottom = 720.0
 color = Color(0, 0, 0, 1)
 
+[node name="TextureRect2" type="TextureRect" parent="."]
+modulate = Color(0.19076231, 0.19076234, 0.19076231, 1)
+layout_mode = 0
+offset_right = 1280.0
+offset_bottom = 720.0
+texture = ExtResource("2_rmr83")
+expand_mode = 1
+
+[node name="TextureRect" type="TextureRect" parent="."]
+layout_mode = 1
+offset_left = 280.0
+offset_top = 2.0000005
+offset_right = 2200.0
+offset_bottom = 1082.0
+scale = Vector2(0.38, 0.38)
+texture = ExtResource("2_wk0pr")
+expand_mode = 1
+
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 8
@@ -27,27 +54,20 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -140.0
-offset_top = -44.5
+offset_top = 132.72
 offset_right = 140.0
-offset_bottom = 44.5
+offset_bottom = 221.72058
 grow_horizontal = 2
 grow_vertical = 2
+theme = SubResource("Theme_8uxxo")
 
 [node name="Start" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 text = "START"
 
-[node name="TextureRect" type="TextureRect" parent="."]
-layout_mode = 0
-offset_left = 524.0
-offset_top = 77.0
-offset_right = 752.0
-offset_bottom = 296.0
-texture = ExtResource("2_wk0pr")
-expand_mode = 1
-
 [node name="Theme" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("3_wk0pr")
 autoplay = true
+parameters/looping = true
 
 [connection signal="pressed" from="VBoxContainer/Start" to="." method="_on_start_pressed"]

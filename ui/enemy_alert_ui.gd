@@ -18,6 +18,8 @@ func _ready() -> void:
 		_connect_enemy(e)
 	# listen for new enemies being added later
 	get_tree().connect("node_added", Callable(self, "_on_node_added"))
+	# listen for nodes removed (cleanup _caution_set)
+	get_tree().connect("node_removed", Callable(self, "_on_node_removed"))
 
 	# initial hide
 	_safe_set_visible(false)
@@ -71,13 +73,30 @@ func _on_node_added(node: Node) -> void:
 	if node.is_in_group("enemies"):
 		_connect_enemy(node)
 
+func _on_node_removed(node: Node) -> void:
+	if node == null:
+		return
+	# node_removed fires when nodes are freed / removed: remove from caution set if present
+	if node in _caution_set:
+		_caution_set.erase(node)
+		_update_ui_visibility()
+
 func _connect_enemy(enemy: Node) -> void:
 	if not is_instance_valid(enemy):
 		return
+	# connect caution signals
 	if enemy.has_signal("caution_started") and not enemy.is_connected("caution_started", Callable(self, "_on_enemy_caution_started")):
 		enemy.connect("caution_started", Callable(self, "_on_enemy_caution_started"))
 	if enemy.has_signal("caution_ended") and not enemy.is_connected("caution_ended", Callable(self, "_on_enemy_caution_ended")):
 		enemy.connect("caution_ended", Callable(self, "_on_enemy_caution_ended"))
+	# connect tree_exited to clean up when enemy leaves scene
+	if not enemy.is_connected("tree_exited", Callable(self, "_on_enemy_tree_exited")):
+		enemy.connect("tree_exited", Callable(self, "_on_enemy_tree_exited"))
+
+func _on_enemy_tree_exited(enemy: Node) -> void:
+	if enemy in _caution_set:
+		_caution_set.erase(enemy)
+		_update_ui_visibility()
 
 func _on_enemy_caution_started(enemy: Node) -> void:
 	if not is_instance_valid(enemy):
@@ -110,6 +129,13 @@ func _process(_delta: float) -> void:
 	# Ensure we have label references (try resolving once per frame until found)
 	if (combat_label == null or caution_label == null or timer_label == null):
 		_try_resolve_labels()
+
+	# Prune invalid entries from _caution_set (cleanup freed enemies)
+	for e in _caution_set.duplicate():
+		if not is_instance_valid(e) or not e.is_inside_tree():
+			_caution_set.erase(e)
+	# After pruning, update visibility if needed
+	_update_ui_visibility()
 
 	# Poll enemies for display values
 	var enemies = get_tree().get_nodes_in_group("enemies")

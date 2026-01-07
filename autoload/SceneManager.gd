@@ -1,37 +1,28 @@
+# SceneManager.gd -- Autoload singleton
+# Put this script as Autoload with name "SceneManager"
 extends Node
 
-# Autoload (Singleton) to hold the "next spawn" info across scene changes.
-# Add this file as an Autoload named "SceneManager" (Project Settings -> Autoload)
+var _cache: Dictionary = {}   # path -> PackedScene
 
-# Facing enum (ใช้ค่าเดียวกับ DoorArea)
-enum Facing { NONE, UP, DOWN, LEFT, RIGHT }
+func load_packed_scene(path: String) -> PackedScene:
+	if path == "":
+		push_error("SceneManager.load_packed_scene: empty path")
+		return null
+	if _cache.has(path):
+		return _cache[path]
+	var packed := ResourceLoader.load(path)
+	if packed == null:
+		push_error("SceneManager: Failed to load path: %s" % path)
+		return null
+	_cache[path] = packed
+	return packed
 
-var next_scene_path: String = ""    # optional: path that will be loaded (res://...) for debugging/history
-var next_spawn_id: String = ""      # marker node NAME to find in the incoming scene
-var next_player_facing: int = Facing.NONE # store enum value
-var next_lock_input: bool = false   # optional: if true player will start with input locked
+func instantiate_scene(path: String) -> Node:
+	var packed := load_packed_scene(path)
+	if packed == null:
+		return null
+	return packed.instantiate()
 
-func set_next(scene_path: String, spawn_id: String, facing: int = Facing.NONE, lock_input: bool = false) -> void:
-	next_scene_path = scene_path
-	next_spawn_id = spawn_id
-	next_player_facing = facing
-	next_lock_input = lock_input
-
-func clear() -> void:
-	next_scene_path = ""
-	next_spawn_id = ""
-	next_player_facing = Facing.NONE
-	next_lock_input = false
-
-func has_pending() -> bool:
-	return next_scene_path != "" or next_spawn_id != ""
-
-func consume() -> Dictionary:
-	var d = {
-		"scene": next_scene_path,
-		"spawn_id": next_spawn_id,
-		"facing": next_player_facing,
-		"lock_input": next_lock_input
-	}
-	clear()
-	return d
+func unload_packed_scene(path: String) -> void:
+	if _cache.has(path):
+		_cache.erase(path)

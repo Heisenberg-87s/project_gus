@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://b0nduhxum2stf"]
+
+[ext_resource type="Script" uid="uid://dijukxubibuxs" path="res://Levels/DoorArea.gd" id="1_bs0ul"]
+
+[node name="DoorArea" type="Area2D" groups=["doors_in_level"]]
+collision_mask = 16
+script = ExtResource("1_bs0ul")

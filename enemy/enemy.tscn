@@ -202,7 +202,6 @@ shape = SubResource("CapsuleShape2D_p200p")
 debug_color = Color(0.9979996, 0, 0.1636788, 0.41960785)
 
 [node name="SightOrigin" type="Marker2D" parent="."]
-position = Vector2(0, 0.66666603)
 
 [node name="Muzzle" type="Marker2D" parent="."]
 position = Vector2(0, -17)

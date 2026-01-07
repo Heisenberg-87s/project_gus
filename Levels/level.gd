@@ -1,88 +1,90 @@
-class_name Level extends Node2D
+# level.gd (attach to LevelRoot Node2D in each Level scene)
+extends Node2D
+class_name LevelBase
 
-## This class is not part of [class SceneManager], it's just here to make the sample
-## project do something. All levels (i.e. the game content) extend from this class. 
-## You will note that because Levels "want" to pass data between them, they implement
-## the optional methods [method get_data] and [method receive_data]
-
-@export var player:Player
-@export var doors:Array[Door]
-var data:LevelDataHandoff
+signal request_scene_change(target_scene_path: String, target_entry_name: String, door_name: String)
 
 func _ready() -> void:
-	player.disable()
-	player.visible = false
-	# This block is here to allow us to test current scene without needing the SceneManager to call these :) 
-	if data == null: 
-		init_scene()
-		start_scene()
-		
+	# Auto-connect doors in group
+	for door in get_tree().get_nodes_in_group("doors_in_level"):
+		if door.has_signal("door_player_entered") and not door.is_connected("door_player_entered", Callable(self, "_on_door_triggered")):
+			door.connect("door_player_entered", Callable(self, "_on_door_triggered"))
 
-## When a class implements this, SceneManager.on_content_finished_loading will invoke it
-## to receive this data and pass it to the next scene
-func get_data():
-	return data
-	
-## 1) emitted at the beginning of SceneManager.on_content_finished_loading
-## When a class implements this, SceneManager.on_content_finished_loading will invoke it
-## to insert data received from the previous scene into this one	
-func receive_data(_data):
-	# implementing class should do some basic checks to make sure it only acts on data it's prepared to accept
-	# if previous scene sends data this scene doesn't need, simple logic as follows ensures no crash occurs
-	# act only on the data you want to receive and process :) 
-	if _data is LevelDataHandoff:
-		data = _data
-		# process data here if need be, for this we just need to receive it but only if it's of the correct data type
+func _on_door_triggered(target_scene_path: String, target_entry_name: String, door_name: String) -> void:
+	emit_signal("request_scene_change", target_scene_path, target_entry_name, door_name)
+
+# Provide any per-level context (e.g., door-specific flags)
+func provide_handoff_context(door_name: String, player_node: Node) -> Dictionary:
+	var ctx: Dictionary = {}
+	# populate as needed
+	return ctx
+
+# Receive player_node + handoff and place player appropriately
+func receive_data(player_node: Node, handoff: LevelDataHandoff) -> void:
+	# Defensive approach: find EntryMarkers node safely
+	var entry_markers: Node = get_node_or_null("EntryMarkers")
+	if entry_markers == null:
+		push_warning("LevelBase.receive_data: EntryMarkers node not found in level '%s'. Will attempt global search for marker '%s'." % [name, handoff.entry_door_name])
+
+	# Find marker node (preferred inside EntryMarkers)
+	var marker_node: Node = null
+	if entry_markers:
+		marker_node = entry_markers.get_node_or_null(handoff.entry_door_name)
+	if marker_node == null:
+		# Try to find anywhere in subtree using our recursive helper
+		marker_node = _find_node_by_name(self, handoff.entry_door_name)
+	if marker_node == null:
+		push_warning("LevelBase.receive_data: Entry marker '%s' not found in level '%s'. Will preserve player's previous global position." % [handoff.entry_door_name, name])
+	# Defer actual reparent/placement to avoid modifying tree mid-traversal
+	call_deferred("_deferred_place_player", player_node, marker_node, handoff)
+
+func _deferred_place_player(player_node: Node, marker_node: Node, handoff: LevelDataHandoff) -> void:
+	# preserve previous global position
+	var prev_global := Vector2.ZERO
+	if player_node is Node2D:
+		prev_global = player_node.global_position
+
+	# Reparent player safely
+	var old_parent = player_node.get_parent()
+	if old_parent:
+		old_parent.remove_child(player_node)
+
+	# Prefer adding to an Actors container if present
+	var actors = get_node_or_null("Actors")
+	if actors == null:
+		actors = self
+	actors.add_child(player_node)
+
+	# Position player:
+	# - if found a Node2D marker -> use its global_position
+	# - else -> restore previous global position (do NOT place at level origin)
+	if marker_node and marker_node is Node2D:
+		player_node.global_position = marker_node.global_position + handoff.spawn_offset
 	else:
-		# SceneManager is designed to allow data mismatches like this occur, because you wno't always know
-		# which scene precedes or follows another. For example, this sample project passes data between
-		# levels but not between a level and the start screen, or vice versa. But it's possible Start screen might
-		# look for data from a different scene. So both incoming and outgoing scenes might implement get/receive_data
-		# but you may not always want to process that data. This is way more explanation than you need for something
-		# that's pretty much designed to work this way and fail silently when not in use :D
-		push_warning("Level %s is receiving data it cannot process" % name)
+		player_node.global_position = prev_global + handoff.spawn_offset
 
-## emitted in the middle of SceneManager.on_content_finished_loading, after this scene is added to the tree
-## 2) I use this to initialize stuff (like player start location) before user regains control
-func init_scene() -> void:
-	init_player_location()
+	# Facing (Vector2)
+	if handoff.player_facing_direction != Vector2.ZERO and player_node.has_method("set_facing"):
+		player_node.call("set_facing", handoff.player_facing_direction)
 
-## emitted at the very end of SceneManager.on_content_finished_loading, after the transition has completed
-## 3) Here I'm using it to return control to the user because everything is ready to go
-func start_scene() -> void:
-	player.enable()
-	_connect_to_doors()
+	# Camera handling: if player contains Camera2D, make it current safely
+	var cam = player_node.get_node_or_null("Camera2D")
+	if cam and cam is Camera2D:
+		cam.make_current()   # safer than cam.current = true
 
-## put player in front of the correct door, facing the correct direction
-func init_player_location() -> void:
-	player.visible = true
-#	var doors = find_children("*","Door")
-	if data != null:
-		for door in doors:
-			if door.name == data.entry_door_name:
-				player.position = door.get_player_entry_vector()
-		player.orient(data.move_dir)
+	# Optional hook for level-specific setup
+	if has_method("on_player_spawned"):
+		call_deferred("on_player_spawned", player_node, handoff)
 
-## signal emitted by Door, # disables doors and players, create handoff data to pass to the new scene (if new scene is a Level)
-func _on_player_entered_door(door:Door) -> void:
-	_disconnect_from_doors()
-	player.disable()
-	player.queue_free()
-	data = LevelDataHandoff.new()
-	data.entry_door_name = door.entry_door_name
-	data.move_dir = door.get_move_dir()
-	set_process(false)
-		
-
-## connects to all door signals in level
-func _connect_to_doors() -> void:
-	for door in doors:
-		if not door.player_entered_door.is_connected(_on_player_entered_door):
-			door.player_entered_door.connect(_on_player_entered_door)
-
-## disconnect from all door signals in level			
-func _disconnect_from_doors() -> void:
-	for door in doors:
-		if door.player_entered_door.is_connected(_on_player_entered_door):
-			door.player_entered_door.disconnect(_on_player_entered_door)
-			
+# Recursive search helper: depth-first search by node name
+func _find_node_by_name(start_node: Node, target_name: String) -> Node:
+	if start_node == null:
+		return null
+	for child in start_node.get_children():
+		if child is Node:
+			if child.name == target_name:
+				return child
+			var found := _find_node_by_name(child, target_name)
+			if found:
+				return found
+	return null

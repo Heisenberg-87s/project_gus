@@ -83,6 +83,7 @@ text = "Press ESC to pause the game"
 label_settings = SubResource("LabelSettings_lmvqq")
 
 [node name="PanelContainer" type="PanelContainer" parent="."]
+visible = false
 layout_mode = 0
 offset_left = 10.0
 offset_top = 148.0
