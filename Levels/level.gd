@@ -76,6 +76,49 @@ func _deferred_place_player(player_node: Node, marker_node: Node, handoff: Level
 	if has_method("on_player_spawned"):
 		call_deferred("on_player_spawned", player_node, handoff)
 
+	# After player is placed, if GameState autoload indicates a transfer-caution, notify enemies in this newly-loaded level
+	call_deferred("_handle_transfer_caution")
+
+func _handle_transfer_caution() -> void:
+	var gs = get_node_or_null("/root/GameState")
+	if gs == null:
+		print("[LevelBase] GameState not found; skipping transfer caution")
+		return
+	print("[LevelBase] _handle_transfer_caution: GameState.is_in_caution=", gs.is_in_caution, " last_marker=", gs.last_player_spawn_marker)
+	if not gs.is_in_caution:
+		# nothing to do; clear saved marker to avoid repeats
+		gs.last_player_spawn_marker = ""
+		return
+	if gs.last_player_spawn_marker == "":
+		return
+
+	# Find spawn marker by name (search entire level)
+	var marker_node: Node = null
+	# prefer EntryMarkers container
+	var entry_markers = get_node_or_null("EntryMarkers")
+	if entry_markers:
+		marker_node = entry_markers.get_node_or_null(gs.last_player_spawn_marker)
+	if marker_node == null:
+		marker_node = _find_node_by_name(self, gs.last_player_spawn_marker)
+	if marker_node == null or not (marker_node is Node2D):
+		push_warning("LevelBase: transfer spawn marker '%s' not found in level '%s'." % [gs.last_player_spawn_marker, name])
+		# clear marker after attempt
+		gs.last_player_spawn_marker = ""
+		return
+
+	# Notify enemies to enter caution and walk to marker position
+	var target_pos: Vector2 = (marker_node as Node2D).global_position
+	print("[LevelBase] instructing enemies to enter caution and go to marker:", gs.last_player_spawn_marker, "pos=", target_pos)
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	for e in enemies:
+		if not is_instance_valid(e):
+			continue
+		if e.has_method("enter_caution_from_transfer"):
+			print("[LevelBase] calling enter_caution_from_transfer on", e.name)
+			e.call_deferred("enter_caution_from_transfer", target_pos)
+	# Clear marker after handing off
+	gs.last_player_spawn_marker = ""
+
 # Recursive search helper: depth-first search by node name
 func _find_node_by_name(start_node: Node, target_name: String) -> Node:
 	if start_node == null:

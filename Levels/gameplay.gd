@@ -43,7 +43,10 @@ func _on_level_request_change(target_scene_path: String, entry_name: String, doo
 		handoff.player_facing_direction = player_node.call("get_facing")
 	handoff.extra = level_ctx
 
-	_perform_level_switch(target_scene_path, handoff)
+	# Defer level switching to avoid modifying collision/physics state during physics callbacks (e.g., body_entered).
+	# This prevents the "Can't change this state while flushing queries" error.
+	print("[Gameplay] deferring level switch to:", target_scene_path, " entry:", entry_name)
+	call_deferred("_perform_level_switch", target_scene_path, handoff)
 
 func _perform_level_switch(target_scene_path: String, handoff: LevelDataHandoff) -> void:
 	# Instantiate new level first (so its nodes are available for search)

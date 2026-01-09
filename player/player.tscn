@@ -1,6 +1,7 @@
-[gd_scene load_steps=92 format=3 uid="uid://2jfjcm6ebujw"]
+[gd_scene load_steps=93 format=3 uid="uid://2jfjcm6ebujw"]
 
 [ext_resource type="Script" uid="uid://10csggpybcp3" path="res://player/script/player.gd" id="1_mm0hj"]
+[ext_resource type="AudioStream" uid="uid://ducy0k0rlbyqy" path="res://assets/audio/doorbuzz.wav" id="3_boad6"]
 [ext_resource type="Script" uid="uid://dultfih7fxw6c" path="res://player/script/player_hurtbox.gd" id="3_g1dw6"]
 [ext_resource type="Texture2D" uid="uid://ctjc2rhyla04t" path="res://player/sprites/wall-right.png" id="3_qjkh3"]
 [ext_resource type="Texture2D" uid="uid://cju7e8tp6eobi" path="res://player/sprites/Solid SnakeGBC.png" id="3_yw30f"]
@@ -1206,6 +1207,7 @@ collision_mask = 37377
 platform_floor_layers = 4294967294
 platform_wall_layers = 1
 script = ExtResource("1_mm0hj")
+stand_blocked_sfx = ExtResource("3_boad6")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -3)
@@ -1216,8 +1218,7 @@ y_sort_enabled = true
 texture_filter = 1
 position = Vector2(0, 5)
 sprite_frames = SubResource("SpriteFrames_2fgmn")
-animation = &"wall_up"
-frame_progress = 0.33611873
+animation = &"gun_idle_up"
 offset = Vector2(0, -10)
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
@@ -1316,23 +1317,43 @@ position = Vector2(0, -24)
 gizmo_extents = 2.1
 
 [node name="RC_WALL_UP" type="RayCast2D" parent="."]
+visible = false
 position = Vector2(0, -6)
 target_position = Vector2(0, -6)
 collision_mask = 129
 
 [node name="RC_WALL_DOWN" type="RayCast2D" parent="."]
+visible = false
 target_position = Vector2(0, 6)
 collision_mask = 129
 
 [node name="RC_WALL_LEFT" type="RayCast2D" parent="."]
+visible = false
 position = Vector2(0, -3)
 target_position = Vector2(-6, 0)
 collision_mask = 129
 
 [node name="RC_WALL_RIGHT" type="RayCast2D" parent="."]
+visible = false
 position = Vector2(0, -3)
 target_position = Vector2(6, 0)
 collision_mask = 129
+
+[node name="RC_VENT_UP" type="RayCast2D" parent="."]
+position = Vector2(0, -3)
+target_position = Vector2(0, -6)
+
+[node name="RC_VENT_DOWN" type="RayCast2D" parent="."]
+position = Vector2(0, -3)
+target_position = Vector2(0, 6)
+
+[node name="RC_VENT_LEFT" type="RayCast2D" parent="."]
+position = Vector2(0, -3)
+target_position = Vector2(-6, 0)
+
+[node name="RC_VENT_RIGHT" type="RayCast2D" parent="."]
+position = Vector2(0, -3)
+target_position = Vector2(6, 0)
 
 [connection signal="area_entered" from="Hurtbox" to="." method="_on_hurtbox_area_entered"]
 [connection signal="area_exited" from="Hurtbox" to="." method="_on_hurtbox_area_exited"]

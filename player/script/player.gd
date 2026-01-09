@@ -38,6 +38,15 @@ var _active_muzzle: Marker2D = null
 @onready var rc_wall_left: RayCast2D = get_node_or_null("RC_WALL_LEFT") as RayCast2D
 @onready var rc_wall_right: RayCast2D = get_node_or_null("RC_WALL_RIGHT") as RayCast2D
 
+# ===== VENT RAYCASTS FOR STAND CHECK (required per request) =====
+# Place 4 RayCast2D children on the Player node named:
+# RC_VENT_UP, RC_VENT_DOWN, RC_VENT_LEFT, RC_VENT_RIGHT
+# Each RayCast2D should be enabled and point outward from player's origin at a distance that samples clearance.
+@onready var rc_vent_up: RayCast2D = get_node_or_null("RC_VENT_UP") as RayCast2D
+@onready var rc_vent_down: RayCast2D = get_node_or_null("RC_VENT_DOWN") as RayCast2D
+@onready var rc_vent_left: RayCast2D = get_node_or_null("RC_VENT_LEFT") as RayCast2D
+@onready var rc_vent_right: RayCast2D = get_node_or_null("RC_VENT_RIGHT") as RayCast2D
+
 # Camera2D used for peek. Prefer a Camera2D child of player named "Camera2D".
 # Fallback: will try to use current viewport camera if not a child.
 @onready var cam: Camera2D = get_node_or_null("Camera2D") as Camera2D
@@ -180,6 +189,17 @@ var _want_crawl: bool = false
 @export var hurtbox_base_offset: Vector2 = Vector2.ZERO
 var _hurtbox_original_pos: Vector2 = Vector2.ZERO
 
+# ====== NEW: Stand-check configuration (kept for compatibility but not required with rays) ======
+@export var stand_height: float = 0.0
+@export var crawl_height: float = 0.0
+@export var stand_check_width: float = 24.0
+@export var stand_check_margin: float = 2.0
+
+# optional sound to play when stand is blocked (add an AudioStreamPlayer2D named "StandBlockedSound" as child, or set this AudioStream and it will be played fallback)
+@export var stand_blocked_sfx: AudioStream = null
+
+var _stand_blocked_player: AudioStreamPlayer2D = null
+
 func _ready() -> void:
 	print("[Player] _ready called in scene:", get_tree().current_scene.name)
 	call_deferred("_apply_scene_manager_spawn")
@@ -226,6 +246,16 @@ func _ready() -> void:
 	_capture_original_shapes()
 	_update_animation(true)
 	_update_hurtbox_shape(true)
+
+	# Prepare optional stand-blocked player (fallback if no node named StandBlockedSound)
+	if has_node("StandBlockedSound"):
+		_stand_blocked_player = get_node("StandBlockedSound") as AudioStreamPlayer2D
+	else:
+		_stand_blocked_player = AudioStreamPlayer2D.new()
+		_stand_blocked_player.bus = "Master"
+		if stand_blocked_sfx != null:
+			_stand_blocked_player.stream = stand_blocked_sfx
+		add_child(_stand_blocked_player)
 
 # -------------------------
 # Helper: apply modulate with blink + base alpha preserved
@@ -536,21 +566,56 @@ func _apply_posture_toggle_request() -> void:
 		_posture_toggle_request = 0
 		return
 
+	# NOTE:
+	# We intercept the case where player is in CRAWL and requests to stand.
+	# In that case we run can_stand(). If can_stand() == false -> block and play feedback.
+	#
+	# Ensure both short-press (1) and the "already-crawling long-hold" (2 while state==CRAWL)
+	# check clearance, otherwise long-hold could bypass check.
+
 	match _posture_toggle_request:
 		1:
-			if state == State.SNEAK:
-				_want_sneak = false
-				_want_crawl = false
-			elif state == State.CRAWL:
+			# Toggle (short press): stand/sneak logic
+			# If currently crawling and player requests to stand -> check clearance
+			if state == State.CRAWL:
+				# Attempt to stand: check with vent rays
+				if not can_stand():
+					# Block standing: keep crawling and play feedback (sound/effect)
+					_play_stand_blocked_feedback()
+					# ensure we remain wanting crawl (prevents pending timer from forcing stand)
+					_want_crawl = true
+					_want_sneak = false
+					_crouch_pending_stand = false
+					_crouch_delay_timer = 0.0
+					_posture_toggle_request = 0
+					return
+				else:
+					# space available -> go to stand
+					_want_sneak = false
+					_want_crawl = false
+			elif state == State.SNEAK:
+				# if currently sneak and short-press -> toggle off crouch (stand)
 				_want_sneak = false
 				_want_crawl = false
 			else:
 				_want_sneak = true
 				_want_crawl = false
 		2:
+			# Long hold: normally request crawl. But if player is already crawling,
+			# some systems treat long-hold as "cancel crawl" — keep behavior but check clearance.
 			if state == State.CRAWL:
-				_want_sneak = false
-				_want_crawl = false
+				# When already crawling and long-hold requested to stand -> check clearance too.
+				if not can_stand():
+					_play_stand_blocked_feedback()
+					_want_crawl = true
+					_want_sneak = false
+					_crouch_pending_stand = false
+					_crouch_delay_timer = 0.0
+					_posture_toggle_request = 0
+					return
+				else:
+					_want_sneak = false
+					_want_crawl = false
 			else:
 				_want_crawl = true
 				_want_sneak = false
@@ -562,6 +627,25 @@ func _apply_posture_toggle_request() -> void:
 
 	_set_state()
 	_posture_toggle_request = 0
+
+# New helper: play feedback when standing is blocked (sound/optional effect)
+func _play_stand_blocked_feedback() -> void:
+	# Play node "StandBlockedSound" if exists (AudioStreamPlayer2D),
+	# otherwise use fallback _stand_blocked_player prepared in _ready().
+	if _stand_blocked_player != null:
+		if stand_blocked_sfx != null:
+			_stand_blocked_player.stream = stand_blocked_sfx
+		if _stand_blocked_player.stream != null:
+			_stand_blocked_player.play()
+	# small visual feedback: flash sprite quickly (non-destructive)
+	if animated_sprite != null:
+		var old = animated_sprite.modulate
+		animated_sprite.modulate = Color(1.0, 0.6, 0.6, old.a)
+		var timer = get_tree().create_timer(0.12)
+		timer.connect("timeout", Callable(self, "_on_stand_block_flash_timeout"))
+
+func _on_stand_block_flash_timeout() -> void:
+	_apply_modulate()
 
 func _set_state(force: bool=false) -> bool:
 	# ถ้า wall-clinging ห้ามเปลี่ยน state ยกเว้นถูกบังคับด้วย force
@@ -789,7 +873,13 @@ func _update_animation(force: bool=false) -> void:
 			return
 	_current_anim = ""
 
-func _on_animation_finished(anim_name: String) -> void:
+func _on_animation_finished() -> void:
+	# AnimatedSprite2D.animation_finished in Godot 4 emits no arguments.
+	# Read the animation name directly from the AnimatedSprite2D node (or use _current_anim if you track it).
+	if animated_sprite == null:
+		return
+	var anim_name: String = animated_sprite.animation if animated_sprite.animation != "" else _current_anim
+
 	if state == State.PUNCH:
 		var dir_str: String = _anim_dir_str()
 		var punch_candidates: Array = ["fist_punch_%s" % dir_str, "punch_%s" % dir_str, "fist_punch", "punch"]
@@ -1248,3 +1338,48 @@ func load_state(data: Dictionary) -> void:
 			if f is Vector2:
 				set_facing(f)
 	# load other fields as needed
+
+# =============================
+# NEW: Clearance check - can_stand() using RayCast2D vents
+# =============================
+# Logic per your request:
+# - If top blocked but bottom still free -> allow stand (only up colliding)
+# - If top blocked and bottom blocked -> cannot stand (both vertical rays hit)
+# - If left blocked but right free -> allow stand
+# - If left blocked and right blocked -> cannot stand
+# Ray names required on Player:
+#   RC_VENT_UP, RC_VENT_DOWN, RC_VENT_LEFT, RC_VENT_RIGHT
+# If a RayCast2D node is missing we treat it as "not colliding" (safe). You can change to strict mode if desired.
+func can_stand() -> bool:
+	# Ensure raycasts are enabled (they should be enabled in the editor)
+	# read ray hits (treat missing rays as not colliding)
+	var up_hit: bool = rc_vent_up != null and rc_vent_up.is_colliding()
+	var down_hit: bool = rc_vent_down != null and rc_vent_down.is_colliding()
+	var left_hit: bool = rc_vent_left != null and rc_vent_left.is_colliding()
+	var right_hit: bool = rc_vent_right != null and rc_vent_right.is_colliding()
+
+	# If both vertical directions blocked -> cannot stand (e.g., trapped vertically)
+	if up_hit and down_hit:
+		return false
+
+	# If both horizontal directions blocked -> cannot stand (e.g., tight horizontal vent)
+	if left_hit and right_hit:
+		return false
+
+	# Otherwise at least one direction of each opposing pair is free -> allow stand
+	return true
+
+# =============================
+# End of can_stand()
+# =============================
+
+# ========== HURTBOX SHAPE SWITCHING CONTINUED (remaining code where needed) ==========
+# (rest of the script already above handles animations / collisions)
+# -------------------------------------------------------------------------
+# Notes:
+# - Add 4 RayCast2D nodes to your Player scene, named exactly:
+#     RC_VENT_UP, RC_VENT_DOWN, RC_VENT_LEFT, RC_VENT_RIGHT
+#   Make sure each RayCast2D.enabled = true and the cast_to length samples the clearance area you care about.
+# - The posture toggle logic (_apply_posture_toggle_request) now calls can_stand() before allowing CRAWL -> stand.
+# - If can_stand() returns false, the player remains in CRAWL and gets a short feedback (sound/flash).
+# -------------------------------------------------------------------------

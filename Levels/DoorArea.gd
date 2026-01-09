@@ -16,4 +16,12 @@ func _ready() -> void:
 func _on_body_entered(body: Node) -> void:
 	# check for player group to be safe
 	if body.is_in_group("player"):
+		print("[DoorArea] Player entered door:", door_name, " -> target_scene:", target_scene_path, " entry:", target_entry_name)
+		# If there's a GameState autoload, tell it about the spawn + preserve current caution time
+		var gs = get_node_or_null("/root/GameState")
+		if gs != null:
+			print("[DoorArea] GameState found; calling prepare_transfer_spawn")
+			gs.prepare_transfer_spawn(target_entry_name, gs.caution_time_remaining)
+		else:
+			print("[DoorArea] GameState NOT found at /root/GameState — ensure autoload is registered")
 		emit_signal("door_player_entered", target_scene_path, target_entry_name, door_name)

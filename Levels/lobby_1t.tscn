@@ -92,8 +92,8 @@ tile_size = Vector2i(24, 24)
 sources/0 = SubResource("TileSetAtlasSource_4hsql")
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_4hsql"]
-vertices = PackedVector2Array(1228.9531, 821.9375, 1238.4531, 822, 10.0234375, 822, 1862, 518, 1862, 783.4297, 1289.0469, 780.0469, 1290.0625, 609, 1308.9609, 416.17188, 1862.3594, 441.60156, 1934.4063, 441.60156, 1934.1328, 518, 11.53125, 190, 1230, 190.99219, 1230, 414.82813, 1230.0469, 609, 1862.0078, 190, 1309.9609, 190, 1935.7031, 85, 1874.0313, 85, 11.796875, 80.02344, 11.9765625, 10, 1935.9609, 10)
-polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2), PackedInt32Array(3, 4, 5, 6, 7), PackedInt32Array(8, 9, 10, 3), PackedInt32Array(0, 2, 11, 12, 13), PackedInt32Array(14, 0, 13), PackedInt32Array(14, 13, 7, 6), PackedInt32Array(15, 8, 3, 7, 16), PackedInt32Array(17, 18, 19, 20, 21)])
+vertices = PackedVector2Array(1862, 806.0625, 1290, 809.9297, 1290, 609, 1862, 518, 1862.3594, 441.60156, 1934.4063, 441.60156, 1934.1328, 518, 1230, 822, 10.0234375, 822, 11.53125, 190, 1230, 609, 1230, 190.99219, 1230, 396, 1289.9531, 396, 1862.0078, 190, 1290.9531, 190, 1935.7031, 85, 1874.0313, 85, 11.796875, 80.02344, 11.9765625, 10, 1935.9609, 10)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(4, 5, 6, 3), PackedInt32Array(7, 8, 9, 10), PackedInt32Array(9, 11, 12), PackedInt32Array(10, 9, 12, 2), PackedInt32Array(3, 2, 12, 13, 4), PackedInt32Array(14, 4, 13, 15), PackedInt32Array(16, 17, 18, 19, 20)])
 outlines = Array[PackedVector2Array]([PackedVector2Array(0, 832, 1943, 832, 1946, 0, 2, 0)])
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_34jfq"]
@@ -680,11 +680,11 @@ physics_material_override = SubResource("PhysicsMaterial_34jfq")
 
 [node name="Wall1" type="CollisionPolygon2D" parent="NavigationRegion2D/Wall"]
 position = Vector2(2159, 117)
-polygon = PackedVector2Array(-285, -22, -191, -22, -190.6482, 314.60345, -286.6482, 314.60345, -287, 63, -859, 63, -860, 289, -919, 288, -919, 64, -2159, 63, -2159, -27)
+polygon = PackedVector2Array(-285, -22, -191, -22, -190.6482, 314.60345, -286.6482, 314.60345, -287, 63, -878, 63, -879, 269, -919, 269, -919, 64, -2159, 63, -2159, -27)
 
 [node name="Wall2" type="CollisionPolygon2D" parent="NavigationRegion2D/Wall"]
 position = Vector2(2086, -2)
-polygon = PackedVector2Array(-214, 530, -214.00003, 795.4917, -807, 792, -806, 621, -846, 621, -847, 814, -214, 818, -22, 818, -22, 722, -118, 722, -118, 530)
+polygon = PackedVector2Array(-214, 530, -214, 818, -806, 822, -806, 621, -846, 621, -846, 847, -212, 846, -22, 818, -22, 722, -118, 722, -118, 530)
 
 [node name="Bullet Wall" type="StaticBody2D" parent="NavigationRegion2D" groups=["walls"]]
 collision_layer = 2048

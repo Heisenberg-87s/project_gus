@@ -736,6 +736,13 @@ func _enter_evasion_state() -> void:
 	ai_state = AIState.EVASION
 	# NOTE: keep caution active until evasion actually ends (UI requirement)
 	# Do NOT call _set_caution_active(false) here.
+	
+	var gs = get_node_or_null("/root/GameState")
+	if gs != null and gs.has_method("start_global_caution"):
+		print("[Enemy][%s] notifying GameState to start_global_caution with time_left=%s" % [name, str(_evasion_time_left)])
+		gs.start_global_caution(_evasion_time_left)
+	else:
+		print("[Enemy][%s] GameState not found when starting evasion" % name)
 
 	_set_facing_toward_point_continuous(_evasion_points[0])
 	_update_animation()
@@ -1151,5 +1158,39 @@ func _closest_scan_index_to_vector(vec: Vector2) -> int:
 			bestdot = d
 			best = i
 	return best
+
+# ==== Transfer caution
+func enter_caution_from_transfer(target_position: Vector2) -> void:
+	# Called by LevelBase after a level transfer while GameState.is_in_caution is true.
+	print("[Enemy][%s] enter_caution_from_transfer -> target=%s" % [name, str(target_position)])
+	_last_known_player_pos = target_position
+	_set_facing_toward_point_continuous(_last_known_player_pos)
+	_update_animation()
+
+	# Enter COMBAT (acts as CAUTION) but do not start local evasion countdown here.
+	ai_state = AIState.COMBAT
+	_pause_on_reach = true
+	_set_caution_active(true)
+
+	# boost sight immediately
+	sight_distance = _original_sight_distance * combat_sight_multiplier
+
+	# stop movement briefly and set agent target
+	velocity = Vector2.ZERO
+	move_and_slide()
+	if agent != null:
+		if agent.has_method("set_target_position"):
+			agent.set_target_position(_last_known_player_pos)
+		elif "target_position" in agent:
+			agent.target_position = _last_known_player_pos
+
+	# Do not start stun tracking or notify other enemies here (this is a transfer restore)
+	_stun_track_player = false
+	_stun_track_node = null
+
+# --- และใน _enter_evasion_state() ให้เพิ่มบรรทัดนี้หลังเปลี่ยน ai_state = AIState.EVASION ---
+# var gs = get_node_or_null("/root/GameState")
+# if gs != null and gs.has_method("start_global_caution"):
+#     gs.start_global_caution(_evasion_time_left)
 
 # End of file
