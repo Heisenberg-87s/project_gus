@@ -1,6 +1,7 @@
-[gd_scene load_steps=93 format=3 uid="uid://2jfjcm6ebujw"]
+[gd_scene load_steps=94 format=3 uid="uid://2jfjcm6ebujw"]
 
 [ext_resource type="Script" uid="uid://10csggpybcp3" path="res://player/script/player.gd" id="1_mm0hj"]
+[ext_resource type="AudioStream" uid="uid://h5qy1cw7r6b7" path="res://assets/audio/footstep.ogg" id="2_g6k8r"]
 [ext_resource type="AudioStream" uid="uid://ducy0k0rlbyqy" path="res://assets/audio/doorbuzz.wav" id="3_boad6"]
 [ext_resource type="Script" uid="uid://dultfih7fxw6c" path="res://player/script/player_hurtbox.gd" id="3_g1dw6"]
 [ext_resource type="Texture2D" uid="uid://ctjc2rhyla04t" path="res://player/sprites/wall-right.png" id="3_qjkh3"]
@@ -1207,6 +1208,7 @@ collision_mask = 37377
 platform_floor_layers = 4294967294
 platform_wall_layers = 1
 script = ExtResource("1_mm0hj")
+footstep_sfx = ExtResource("2_g6k8r")
 stand_blocked_sfx = ExtResource("3_boad6")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
