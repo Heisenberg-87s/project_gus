@@ -4,6 +4,8 @@ class_name player
 enum Mode { NORMAL, GUN }
 enum State { IDLE, WALK, RUN, SNEAK, CRAWL, PUNCH, WALL_CLING } # เพิ่ม WALL_CLING
 
+var input_enabled: bool = true
+
 # ===== MOVEMENT CONFIG =====
 const MAX_SPEED: float = 150.0
 const ACCELERATION: float = 1400.0
@@ -499,6 +501,9 @@ func _process(delta: float) -> void:
 	_update_animation()
 
 func _physics_process(delta: float) -> void:
+	if not input_enabled:
+		velocity = Vector2.ZERO
+		return
 	# ถ้า wall-clinging: อนุญาตให้เคลื่อนที่เฉพาะแนวที่ขนานกับผนัง (tangent)
 	if _is_wall_clinging:
 		# ความเร็วเป้าหมายตาม state (walk/run/crouch ฯลฯ)

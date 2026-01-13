@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://dth3xnfeitujx" path="res://ui/weapon_ui.tscn" id="2_kdjhy"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_m7ell"]
-bg_color = Color(0, 0, 0, 1)
+bg_color = Color(0.36862746, 0.23921569, 0, 0.6627451)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kdjhy"]
 
@@ -12,11 +12,13 @@ bg_color = Color(0, 0, 0, 1)
 bg_color = Color(0, 0, 0, 0)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1r8bn"]
-bg_color = Color(1, 1, 1, 1)
+bg_color = Color(1, 0.84705883, 0, 1)
 
 [sub_resource type="LabelSettings" id="LabelSettings_7igj3"]
-shadow_size = 10
-shadow_color = Color(0, 0, 0, 0.34117648)
+font_size = 22
+font_color = Color(1, 0.84705883, 0, 1)
+shadow_size = 9
+shadow_color = Color(1, 0.827451, 0, 0.3019608)
 
 [node name="Health_bar" type="Control"]
 layout_mode = 3
@@ -26,26 +28,27 @@ script = ExtResource("1_m7ell")
 
 [node name="Back" type="ProgressBar" parent="."]
 layout_mode = 0
-offset_left = 442.0
-offset_top = 660.0
-offset_right = 757.0
-offset_bottom = 687.0
+offset_left = 44.0
+offset_top = 40.0
+offset_right = 306.0
+offset_bottom = 98.0
 theme_override_styles/background = SubResource("StyleBoxFlat_m7ell")
 theme_override_styles/fill = SubResource("StyleBoxFlat_kdjhy")
 show_percentage = false
 
 [node name="Bar" type="ProgressBar" parent="."]
 layout_mode = 0
-offset_left = 448.0
-offset_top = 668.0
-offset_right = 751.0
-offset_bottom = 679.0
+offset_left = 49.0
+offset_top = 69.0
+offset_right = 301.0
+offset_bottom = 90.0
 theme_override_styles/background = SubResource("StyleBoxFlat_srckl")
 theme_override_styles/fill = SubResource("StyleBoxFlat_1r8bn")
 value = 100.0
 show_percentage = false
 
 [node name="gap" type="ProgressBar" parent="."]
+visible = false
 layout_mode = 0
 offset_left = 689.0
 offset_top = 660.0
@@ -56,6 +59,7 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_kdjhy")
 show_percentage = false
 
 [node name="gap2" type="ProgressBar" parent="."]
+visible = false
 layout_mode = 0
 offset_left = 628.0
 offset_top = 660.0
@@ -66,6 +70,7 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_kdjhy")
 show_percentage = false
 
 [node name="gap3" type="ProgressBar" parent="."]
+visible = false
 layout_mode = 0
 offset_left = 568.0
 offset_top = 660.0
@@ -76,6 +81,7 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_kdjhy")
 show_percentage = false
 
 [node name="gap4" type="ProgressBar" parent="."]
+visible = false
 layout_mode = 0
 offset_left = 508.0
 offset_top = 660.0
@@ -87,16 +93,14 @@ show_percentage = false
 
 [node name="Label" type="Label" parent="."]
 layout_mode = 0
-offset_left = 464.0
-offset_top = 644.0
-offset_right = 535.0
-offset_bottom = 667.0
+offset_left = 49.0
+offset_top = 39.0
+offset_right = 146.0
+offset_bottom = 70.0
 text = "SHADOW"
 label_settings = SubResource("LabelSettings_7igj3")
 
 [node name="weapon_ui" parent="." instance=ExtResource("2_kdjhy")]
 layout_mode = 1
-offset_left = 1280.0
-offset_top = 719.0
-offset_right = 1280.0
-offset_bottom = 719.0
+offset_top = 720.0
+offset_bottom = 720.0

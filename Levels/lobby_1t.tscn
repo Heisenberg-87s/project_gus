@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=4 uid="uid://c1dfu181dvbqk"]
+[gd_scene load_steps=20 format=4 uid="uid://c1dfu181dvbqk"]
 
 [ext_resource type="Script" uid="uid://bqkq8pmqg8bu2" path="res://Levels/level.gd" id="1_5gkmi"]
 [ext_resource type="Texture2D" uid="uid://1etdfknemrkf" path="res://assets/MGSGB Tileset.png" id="1_edqoi"]
@@ -8,6 +8,7 @@
 [ext_resource type="TileSet" uid="uid://boh4h7gejniuw" path="res://assets/Sprite.tres" id="4_m32hf"]
 [ext_resource type="PackedScene" uid="uid://v1cx2pek8gbo" path="res://enemy/enemy.tscn" id="5_qulnn"]
 [ext_resource type="PackedScene" uid="uid://dq88dbc0344sd" path="res://enviroment/GrassArea.tscn" id="7_mvf56"]
+[ext_resource type="Script" uid="uid://bha18t1syo0t1" path="res://Levels/test-cut.gd" id="9_jncn1"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_qulnn"]
 texture = ExtResource("1_edqoi")
@@ -651,6 +652,9 @@ texture_region_size = Vector2i(64, 64)
 tile_size = Vector2i(32, 32)
 sources/0 = SubResource("TileSetAtlasSource_jncn1")
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_t6g7y"]
+size = Vector2(40, 720)
+
 [node name="Lobby1T" type="Node2D"]
 y_sort_enabled = true
 script = ExtResource("1_5gkmi")
@@ -752,6 +756,17 @@ tile_set = SubResource("TileSet_t6g7y")
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="GrassArea"]
 polygon = PackedVector2Array(-1128, 21, -655, 21, -651, 56, -536, 57, -531, 24, -284, 25, -253, -5, 38, -11, 41, 214, 250, 220, 252, 143, 291, 52, 406, 53, 466, 20, 492, -9, 597, -7, 600, -46, 54, -43, -43, -109, -1127, -106)
 
+[node name="Test" type="Area2D" parent="."]
+position = Vector2(852, 469)
+collision_mask = 16
+script = ExtResource("9_jncn1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Test"]
+position = Vector2(2, 0)
+shape = SubResource("RectangleShape2D_t6g7y")
+debug_color = Color(0.97597116, 0, 0.41895896, 0.41960785)
+
 [connection signal="body_entered" from="NavigationRegion2D/DoorEast" to="." method="_on_invisible_wall_body_entered"]
 [connection signal="timeout" from="Enemy/NavTimer" to="Enemy" method="_on_nav_timer_timeout"]
 [connection signal="timeout" from="Enemy2/NavTimer" to="Enemy2" method="_on_nav_timer_timeout"]
+[connection signal="body_entered" from="Test" to="Test" method="_on_body_entered"]

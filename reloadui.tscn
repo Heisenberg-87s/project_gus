@@ -52,6 +52,7 @@ Button/styles/normal = SubResource("StyleBoxFlat_1v8so")
 Button/styles/pressed = SubResource("StyleBoxFlat_iow42")
 
 [node name="Control" type="Control"]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

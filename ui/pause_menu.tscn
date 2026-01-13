@@ -98,6 +98,20 @@ layout_mode = 2
 text = "Go to TItle Screen"
 alignment = 0
 
+[node name="Label" type="Label" parent="."]
+layout_mode = 0
+offset_left = 924.0
+offset_top = 456.0
+offset_right = 1067.0
+offset_bottom = 635.0
+text = "Move = W A S D
+Attack = Left Click
+Sneak = C
+Crawl = C (HOLD)
+Gun = 1
+Lurking Enemy = V
+Wall Hug = SPACE"
+
 [connection signal="pressed" from="PanelContainer/VBoxContainer/PanelContainer/Resume" to="." method="_on_button_pressed"]
 [connection signal="pressed" from="PanelContainer/VBoxContainer/PanelContainer/Resume" to="." method="_on_resume_pressed"]
 [connection signal="pressed" from="PanelContainer/VBoxContainer/PanelContainer4/Restart" to="." method="_on_restart_pressed"]

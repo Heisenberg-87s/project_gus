@@ -1,0 +1,18 @@
+[gd_scene load_steps=5 format=3 uid="uid://gi3w7y7f0nvy"]
+
+[ext_resource type="Script" uid="uid://blsbgvje2yldh" path="res://test_cutscene.gd" id="1_x36sy"]
+[ext_resource type="PackedScene" uid="uid://2jfjcm6ebujw" path="res://player/player.tscn" id="2_vi2s4"]
+[ext_resource type="PackedScene" uid="uid://kxpt5lys0skf" path="res://Dialogue/balloon.tscn" id="3_7x3t4"]
+[ext_resource type="Resource" uid="uid://dll8i0k8vh721" path="res://Dialogue/Test.dialogue" id="4_rv1j6"]
+
+[node name="TestCutscene" type="Node2D"]
+script = ExtResource("1_x36sy")
+
+[node name="Player" parent="." instance=ExtResource("2_vi2s4")]
+position = Vector2(81, 112)
+
+[node name="Camera2D" type="Camera2D" parent="Player"]
+
+[node name="ExampleBalloon" parent="." instance=ExtResource("3_7x3t4")]
+dialogue_resource = ExtResource("4_rv1j6")
+start_from_title = "start"

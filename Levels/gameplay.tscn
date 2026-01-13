@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://c0rkexsn8u0vd"]
+[gd_scene load_steps=9 format=3 uid="uid://c0rkexsn8u0vd"]
 
 [ext_resource type="Script" uid="uid://bgtorvuufrv62" path="res://Levels/gameplay.gd" id="1_xvsls"]
 [ext_resource type="PackedScene" uid="uid://kml0362lhw4h" path="res://health_bar.tscn" id="2_p3lki"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://cydk53nqabmss" path="res://ui/game_over_panel.tscn" id="4_uhcv8"]
 [ext_resource type="PackedScene" uid="uid://cd1fmymmeibu0" path="res://reloadui.tscn" id="5_6ckdd"]
 [ext_resource type="PackedScene" uid="uid://lljyty4qe7fo" path="res://ui/pause_menu.tscn" id="6_8kmjy"]
+[ext_resource type="PackedScene" uid="uid://dg20hs0fywncr" path="res://ui/codec_call.tscn" id="8_uhcv8"]
 
 [node name="Gameplay" type="Node2D"]
 script = ExtResource("1_xvsls")
@@ -22,7 +23,7 @@ scale = Vector2(0.25, 0.25)
 zoom = Vector2(1.5, 1.5)
 limit_left = 0
 limit_top = 0
-limit_right = 2060
+limit_right = 1930
 limit_bottom = 1920
 drag_horizontal_enabled = true
 drag_vertical_enabled = true
@@ -48,3 +49,5 @@ offset_right = 3.0
 offset_bottom = 5.0
 
 [node name="PauseMenu" parent="CanvasLayer" instance=ExtResource("6_8kmjy")]
+
+[node name="CanvasLayer_Codec" parent="." instance=ExtResource("8_uhcv8")]
