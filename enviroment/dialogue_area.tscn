@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://cpfn7aoyshvcv"]
+
+[ext_resource type="Script" uid="uid://dmd627s6f3238" path="res://Levels/DialogueArea.gd" id="1_12cen"]
+
+[node name="DialogueArea" type="Area2D"]
+collision_mask = 16
+script = ExtResource("1_12cen")

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dtwdwffrymegf"
-path="res://.godot/imported/ShadowTest.jpg-49e2a5fb2ff68ee73ec7618dba29dc25.ctex"
+uid="uid://dq3mh427gd6di"
+path="res://.godot/imported/portrait.png-5a48354f27743f9a1849d3c0920f5b72.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ShadowTest.jpg"
-dest_files=["res://.godot/imported/ShadowTest.jpg-49e2a5fb2ff68ee73ec7618dba29dc25.ctex"]
+source_file="res://assets/Characters/ลุง G/portrait.png"
+dest_files=["res://.godot/imported/portrait.png-5a48354f27743f9a1849d3c0920f5b72.ctex"]
 
 [params]
 

@@ -1,6 +1,6 @@
 extends CanvasLayer
 
-signal codec_ready
+signal dialogue_ready
 
 @onready var anim: AnimationPlayer = $AnimationPlayer
 var active := false
@@ -10,23 +10,23 @@ func _ready() -> void:
 	anim.animation_finished.connect(_on_animation_finished)
 	DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
 
-func play_codec():
+func play_dialogue():
 	if active:
 		return
 
 	active = true
 	visible = true
-	anim.play("codec_call")
+	anim.play("dialogue_up")
 
 func _on_animation_finished(name: StringName) -> void:
-	if name == "codec_call":
+	if name == "dialogue_up":
 		# ✅ บอกว่า animation พร้อมแล้ว
-		emit_signal("codec_ready")
+		emit_signal("dialogue_ready")
 
-	elif name == "codec_end":
+	elif name == "dialogue_end":
 		visible = false
 		active = false
 
 func _on_dialogue_ended(_res):
 	if active:
-		anim.play("codec_end")
+		anim.play("dialogue_end")

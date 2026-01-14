@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=4 uid="uid://y1wdry2cvq3j"]
+[gd_scene load_steps=22 format=4 uid="uid://y1wdry2cvq3j"]
 
 [ext_resource type="Script" uid="uid://bqkq8pmqg8bu2" path="res://Levels/level.gd" id="1_3u4jg"]
 [ext_resource type="Texture2D" uid="uid://1etdfknemrkf" path="res://assets/MGSGB Tileset.png" id="2_1ai7p"]
@@ -6,6 +6,8 @@
 [ext_resource type="PackedScene" uid="uid://v1cx2pek8gbo" path="res://enemy/enemy.tscn" id="4_6onxe"]
 [ext_resource type="PackedScene" uid="uid://dq88dbc0344sd" path="res://enviroment/GrassArea.tscn" id="4_umu42"]
 [ext_resource type="PackedScene" uid="uid://b0nduhxum2stf" path="res://enviroment/DoorArea.tscn" id="5_x8a1x"]
+[ext_resource type="PackedScene" uid="uid://pgiu4skbitvq" path="res://enviroment/codec_area.tscn" id="7_j6lk1"]
+[ext_resource type="Resource" uid="uid://cuulbv32ohp1b" path="res://Dialogue/test4.dialogue" id="8_wvf8f"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ao81e"]
 texture = ExtResource("2_1ai7p")
@@ -180,6 +182,9 @@ size = Vector2(48, 20)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_j6lk1"]
 size = Vector2(40.215, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wvf8f"]
+size = Vector2(40, 60)
 
 [node name="Level1T" type="Node2D"]
 script = ExtResource("1_3u4jg")
@@ -403,6 +408,13 @@ autostart = true
 
 [node name="p1" type="Marker2D" parent="Enemy4/PatrolPoints"]
 position = Vector2(-10.49, 0)
+
+[node name="CodecArea" parent="." instance=ExtResource("7_j6lk1")]
+position = Vector2(26, 239)
+dialogue = ExtResource("8_wvf8f")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CodecArea"]
+shape = SubResource("RectangleShape2D_wvf8f")
 
 [connection signal="timeout" from="Enemy/NavTimer" to="Enemy" method="_on_nav_timer_timeout"]
 [connection signal="timeout" from="Enemy2/NavTimer" to="Enemy2" method="_on_nav_timer_timeout"]

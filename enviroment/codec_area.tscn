@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://pgiu4skbitvq"]
+
+[ext_resource type="Script" uid="uid://bha18t1syo0t1" path="res://Levels/CodecArea.gd" id="1_bqisl"]
+[ext_resource type="PackedScene" uid="uid://du17cyxj54hum" path="res://Dialogue/codec.tscn" id="2_yqasm"]
+
+[node name="CodecArea" type="Area2D"]
+collision_mask = 16
+script = ExtResource("1_bqisl")
+balloon = ExtResource("2_yqasm")

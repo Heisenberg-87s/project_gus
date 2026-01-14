@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dfmiyirtl1jp7"
-path="res://.godot/imported/Tenyears.png-120384d5c328bbd5d80307c129f5ce6f.ctex"
+uid="uid://3icodwb3vb73"
+path="res://.godot/imported/portrait.png-07608ec00bdfd02266f40325f6d1abe1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/Tenyears.png"
-dest_files=["res://.godot/imported/Tenyears.png-120384d5c328bbd5d80307c129f5ce6f.ctex"]
+source_file="res://assets/Characters/Minto/portrait.png"
+dest_files=["res://.godot/imported/portrait.png-07608ec00bdfd02266f40325f6d1abe1.ctex"]
 
 [params]
 

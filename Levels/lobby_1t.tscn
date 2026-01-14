@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=4 uid="uid://c1dfu181dvbqk"]
+[gd_scene load_steps=24 format=4 uid="uid://c1dfu181dvbqk"]
 
 [ext_resource type="Script" uid="uid://bqkq8pmqg8bu2" path="res://Levels/level.gd" id="1_5gkmi"]
 [ext_resource type="Texture2D" uid="uid://1etdfknemrkf" path="res://assets/MGSGB Tileset.png" id="1_edqoi"]
@@ -8,7 +8,10 @@
 [ext_resource type="TileSet" uid="uid://boh4h7gejniuw" path="res://assets/Sprite.tres" id="4_m32hf"]
 [ext_resource type="PackedScene" uid="uid://v1cx2pek8gbo" path="res://enemy/enemy.tscn" id="5_qulnn"]
 [ext_resource type="PackedScene" uid="uid://dq88dbc0344sd" path="res://enviroment/GrassArea.tscn" id="7_mvf56"]
-[ext_resource type="Script" uid="uid://bha18t1syo0t1" path="res://Levels/test-cut.gd" id="9_jncn1"]
+[ext_resource type="Resource" uid="uid://dpklk3y5tcmy3" path="res://Dialogue/test2.dialogue" id="10_1shrj"]
+[ext_resource type="PackedScene" uid="uid://pgiu4skbitvq" path="res://enviroment/codec_area.tscn" id="10_j03hq"]
+[ext_resource type="Resource" uid="uid://dhmma7tbobn2y" path="res://Dialogue/test3.dialogue" id="10_wmvu1"]
+[ext_resource type="PackedScene" uid="uid://cpfn7aoyshvcv" path="res://enviroment/dialogue_area.tscn" id="11_1shrj"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_qulnn"]
 texture = ExtResource("1_edqoi")
@@ -652,7 +655,10 @@ texture_region_size = Vector2i(64, 64)
 tile_size = Vector2i(32, 32)
 sources/0 = SubResource("TileSetAtlasSource_jncn1")
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_t6g7y"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_j03hq"]
+size = Vector2(40, 720)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wmvu1"]
 size = Vector2(40, 720)
 
 [node name="Lobby1T" type="Node2D"]
@@ -756,17 +762,22 @@ tile_set = SubResource("TileSet_t6g7y")
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="GrassArea"]
 polygon = PackedVector2Array(-1128, 21, -655, 21, -651, 56, -536, 57, -531, 24, -284, 25, -253, -5, 38, -11, 41, 214, 250, 220, 252, 143, 291, 52, 406, 53, 466, 20, 492, -9, 597, -7, 600, -46, 54, -43, -43, -109, -1127, -106)
 
-[node name="Test" type="Area2D" parent="."]
-position = Vector2(852, 469)
-collision_mask = 16
-script = ExtResource("9_jncn1")
+[node name="DialogueArea" parent="." instance=ExtResource("11_1shrj")]
+position = Vector2(1218, 463)
+dialogue = ExtResource("10_wmvu1")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Test"]
-position = Vector2(2, 0)
-shape = SubResource("RectangleShape2D_t6g7y")
-debug_color = Color(0.97597116, 0, 0.41895896, 0.41960785)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DialogueArea"]
+shape = SubResource("RectangleShape2D_j03hq")
+debug_color = Color(7.70092e-07, 0.4718604, 0.72858036, 0.5647059)
+
+[node name="CodecArea" parent="." instance=ExtResource("10_j03hq")]
+position = Vector2(797, 470)
+dialogue = ExtResource("10_1shrj")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CodecArea"]
+shape = SubResource("RectangleShape2D_wmvu1")
+debug_color = Color(1, 0, 0.25882354, 0.41960785)
 
 [connection signal="body_entered" from="NavigationRegion2D/DoorEast" to="." method="_on_invisible_wall_body_entered"]
 [connection signal="timeout" from="Enemy/NavTimer" to="Enemy" method="_on_nav_timer_timeout"]
 [connection signal="timeout" from="Enemy2/NavTimer" to="Enemy2" method="_on_nav_timer_timeout"]
-[connection signal="body_entered" from="Test" to="Test" method="_on_body_entered"]

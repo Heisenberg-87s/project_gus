@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ci3iqmdjql5rg"
-path="res://.godot/imported/G.jpeg-acccfd056000445c3e06b3b63a16a100.ctex"
+uid="uid://dfmiyirtl1jp7"
+path="res://.godot/imported/Tenyears.png-ba37628e4cea139cc3207ac8d296183e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/G.jpeg"
-dest_files=["res://.godot/imported/G.jpeg-acccfd056000445c3e06b3b63a16a100.ctex"]
+source_file="res://assets/Characters/Tenyears.png"
+dest_files=["res://.godot/imported/Tenyears.png-ba37628e4cea139cc3207ac8d296183e.ctex"]
 
 [params]
 
