@@ -10,7 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://dg20hs0fywncr" path="res://ui/codec_call.tscn" id="8_uhcv8"]
 [ext_resource type="PackedScene" uid="uid://ckeiqxccffkm5" path="res://ui/dialogue_anim.tscn" id="9_6ckdd"]
 
-[node name="Gameplay" type="Node2D"]
+[node name="Gameplay" type="Node2D" groups=["gameplay"]]
 script = ExtResource("1_xvsls")
 initial_level_scene_path = "res://Levels/lobby_1t.tscn"
 

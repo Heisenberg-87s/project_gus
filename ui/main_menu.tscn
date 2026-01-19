@@ -1,10 +1,10 @@
-[gd_scene load_steps=11 format=3 uid="uid://bc83xu7p5onom"]
+[gd_scene load_steps=12 format=3 uid="uid://bc83xu7p5onom"]
 
 [ext_resource type="Script" uid="uid://bxa4k8ggvcc3r" path="res://ui/main_menu.gd" id="1_0dkrt"]
 [ext_resource type="Texture2D" uid="uid://dq3mh427gd6di" path="res://assets/Characters/ลุง G/portrait.png" id="2_8uxxo"]
 [ext_resource type="Texture2D" uid="uid://8od4rvwi14e1" path="res://assets/GUINEA_GEARW.png" id="2_wk0pr"]
 [ext_resource type="AudioStream" uid="uid://b66pwp5x3y8k3" path="res://assets/audio/43_Snake Eater.mp3" id="3_wk0pr"]
-[ext_resource type="AudioStream" uid="uid://baspxseribb2g" path="res://assets/audio/menuselect.wav" id="5_8uxxo"]
+[ext_resource type="AudioStream" uid="uid://biiinrrgqt6ty" path="res://assets/audio/menu_select.wav" id="5_8uxxo"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rmr83"]
 bg_color = Color(0.6, 0.6, 0.6, 0)
@@ -141,8 +141,37 @@ tracks/4/keys = {
 "values": [Color(0.19076231, 0.19076234, 0.19076231, 1)]
 }
 
+[sub_resource type="Animation" id="Animation_8uxxo"]
+resource_name = "Menu"
+length = 0.3267
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("VBoxContainer/Start:theme_override_colors/font_color")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.16666667, 0.3267),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Color(0.7046444, 0, 0.063278556, 1), Color(1, 1, 0.1490196, 1), Color(0.7058824, 0, 0.0627451, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("StartSFX:playing")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_8uxxo"]
 _data = {
+&"Menu": SubResource("Animation_8uxxo"),
 &"MenuFade": SubResource("Animation_rmr83"),
 &"RESET": SubResource("Animation_ei257")
 }
@@ -171,11 +200,11 @@ texture = ExtResource("2_8uxxo")
 expand_mode = 1
 
 [node name="TextureRect" type="TextureRect" parent="."]
+z_index = 1
 layout_mode = 1
-offset_left = 280.0
-offset_top = 2.0000005
-offset_right = 2200.0
-offset_bottom = 1082.0
+offset_left = 284.0
+offset_right = 2204.0
+offset_bottom = 1080.0
 scale = Vector2(0.38, 0.38)
 texture = ExtResource("2_wk0pr")
 expand_mode = 1

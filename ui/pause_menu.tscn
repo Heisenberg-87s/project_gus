@@ -79,7 +79,7 @@ layout_mode = 2
 
 [node name="Save" type="Button" parent="PanelContainer/VBoxContainer/PanelContainer2"]
 layout_mode = 2
-text = " Save (Not Working)"
+text = " Save"
 alignment = 0
 
 [node name="PanelContainer3" type="PanelContainer" parent="PanelContainer/VBoxContainer"]
@@ -87,7 +87,7 @@ layout_mode = 2
 
 [node name="Load" type="Button" parent="PanelContainer/VBoxContainer/PanelContainer3"]
 layout_mode = 2
-text = " Load (Not Working)"
+text = " Load"
 alignment = 0
 
 [node name="PanelContainer5" type="PanelContainer" parent="PanelContainer/VBoxContainer"]
@@ -112,8 +112,8 @@ Gun = 1
 Lurking Enemy = V
 Wall Hug = SPACE"
 
-[connection signal="pressed" from="PanelContainer/VBoxContainer/PanelContainer/Resume" to="." method="_on_button_pressed"]
 [connection signal="pressed" from="PanelContainer/VBoxContainer/PanelContainer/Resume" to="." method="_on_resume_pressed"]
+[connection signal="pressed" from="PanelContainer/VBoxContainer/PanelContainer/Resume" to="." method="_on_button_pressed"]
 [connection signal="pressed" from="PanelContainer/VBoxContainer/PanelContainer4/Restart" to="." method="_on_restart_pressed"]
 [connection signal="pressed" from="PanelContainer/VBoxContainer/PanelContainer2/Save" to="." method="_on_save_pressed"]
 [connection signal="pressed" from="PanelContainer/VBoxContainer/PanelContainer3/Load" to="." method="_on_load_pressed"]

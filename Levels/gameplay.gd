@@ -5,6 +5,7 @@ extends Node
 @onready var player_node: Node = $Player    # keep name different from class_name
 
 var current_level: Node = null
+var current_level_path := ""
 
 func _ready() -> void:
 	if initial_level_scene_path != "":
@@ -73,3 +74,59 @@ func _perform_level_switch(target_scene_path: String, handoff: LevelDataHandoff)
 
 	# Pass player + handoff to new level for placement (deferred so level fully ready)
 	current_level.call_deferred("receive_data", player_node, handoff)
+
+# ===== save and load ======
+func load_level(path: String, from_save := false):
+	current_level_path = path
+
+	get_tree().change_scene_to_file(path)
+
+	if from_save:
+		await get_tree().process_frame
+		_apply_save()
+
+func _apply_save() -> void:
+	var data = await SaveManager.load_game()
+	if not data:
+		return
+
+	var player = get_tree().get_first_node_in_group("player")
+	if not player:
+		return
+
+	var p = data["player"]
+
+	player.global_position = Vector2(p.position.x, p.position.y)
+	player.health = p.health
+	player.mode = p.mode
+	player.state = p.state
+	player.facing_direction = p.direction
+
+	
+	
+func load_from_save(data: Dictionary) -> void:
+	if data.is_empty():
+		return
+
+	var scene_path = data["scene_path"]
+	var player_data = data["player"]
+
+	# โหลดด่าน
+	_perform_level_switch(scene_path, LevelDataHandoff.new())
+
+	await get_tree().process_frame
+
+	# restore player
+	player_node.global_position = player_data["position"]
+	player_node.health = player_data["health"]
+	player_node.mode = player_data["mode"]
+	player_node.stance = player_data["stance"]
+	player_node.set_facing(player_data["direction"])
+	
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		var pause = $CanvasLayer/PauseMenu
+		if pause.visible:
+			pause.close()
+		else:
+			pause.open()

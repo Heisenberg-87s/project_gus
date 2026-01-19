@@ -1209,6 +1209,8 @@ platform_floor_layers = 4294967294
 platform_wall_layers = 1
 script = ExtResource("1_mm0hj")
 footstep_sfx = ExtResource("2_g6k8r")
+gun_cooldown_time = 1.0
+invuln_time = 0.09
 stand_blocked_sfx = ExtResource("3_boad6")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

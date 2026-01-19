@@ -170,8 +170,9 @@ collision_mask = 10
 platform_floor_layers = 4294967294
 platform_wall_layers = 1
 script = ExtResource("1_2mvqj")
-sight_debug = false
+sight_distance = 600.0
 sight_origin_path = NodePath("SightOrigin")
+stealth_grass_crawl_override_distance = 60.0
 sound_reaction_pause = 0.6
 projectile_scene = ExtResource("2_p200p")
 

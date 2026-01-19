@@ -12,8 +12,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event.is_action_pressed("ui_accept"):
 		started = true
-		anim.play("MenuFade")
+		anim.play("Menu")
 
 func _on_animation_finished(anim_name: StringName) -> void:
-	if anim_name == "MenuFade":
-		get_tree().change_scene_to_file("res://Levels/gameplay.tscn")
+	if anim_name == "Menu":
+		get_tree().change_scene_to_file("res://ui/select_menu.tscn")

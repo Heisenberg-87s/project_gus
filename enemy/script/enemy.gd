@@ -73,10 +73,10 @@ var _sound_reaction_timer: float = 1.0
 var _sound_reaction_waiting: bool = true
 
 # Shooting
-@export var attack_cooldown: float = 0.1
+@export var attack_cooldown: float = 1.0
 @export var projectile_scene: PackedScene
 @export var muzzle_offset: Vector2 = Vector2.ZERO
-@export var projectile_speed: float = 1000.0
+@export var projectile_speed: float = 1400.0
 var _attack_timer: float = 0.0
 signal shoot_at(target_pos)
 

@@ -4,6 +4,9 @@ class_name LevelBase
 
 signal request_scene_change(target_scene_path: String, target_entry_name: String, door_name: String)
 
+@onready var player = $Player
+
+
 func _ready() -> void:
 	# Auto-connect doors in group
 	for door in get_tree().get_nodes_in_group("doors_in_level"):

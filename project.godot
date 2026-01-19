@@ -17,10 +17,10 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-SaveManager="*res://ui/SaveManager.gd"
 SceneManager="*res://autoload/SceneManager.gd"
 GameState="*res://autoload/GameState.gd"
 DialogueManager="*res://addons/dialogue_manager/dialogue_manager.gd"
+SaveManager="*res://autoload/SaveManager.gd"
 
 [dialogue_manager]
 
