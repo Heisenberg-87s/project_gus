@@ -14,9 +14,11 @@ func close():
 	visible = false
 	get_tree().paused = false
 
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel") and visible:
 		close()
+	elif event.is_action_pressed("ui_cancel"):
+		open()
 
 func _on_resume_pressed():
 	close()

@@ -15,6 +15,7 @@ script = ExtResource("1_xvsls")
 initial_level_scene_path = "res://Levels/lobby_1t.tscn"
 
 [node name="LevelHolder" type="Node2D" parent="."]
+process_mode = 1
 
 [node name="Player" parent="." instance=ExtResource("3_uhcv8")]
 position = Vector2(347, 384)

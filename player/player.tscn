@@ -1,6 +1,7 @@
-[gd_scene load_steps=94 format=3 uid="uid://2jfjcm6ebujw"]
+[gd_scene load_steps=95 format=3 uid="uid://2jfjcm6ebujw"]
 
 [ext_resource type="Script" uid="uid://10csggpybcp3" path="res://player/script/player.gd" id="1_mm0hj"]
+[ext_resource type="AudioStream" uid="uid://1ie43x5nbp8b" path="res://assets/audio/fire.wav" id="2_boad6"]
 [ext_resource type="AudioStream" uid="uid://h5qy1cw7r6b7" path="res://assets/audio/footstep.ogg" id="2_g6k8r"]
 [ext_resource type="AudioStream" uid="uid://ducy0k0rlbyqy" path="res://assets/audio/doorbuzz.wav" id="3_boad6"]
 [ext_resource type="Script" uid="uid://dultfih7fxw6c" path="res://player/script/player_hurtbox.gd" id="3_g1dw6"]
@@ -1208,6 +1209,8 @@ collision_mask = 37377
 platform_floor_layers = 4294967294
 platform_wall_layers = 1
 script = ExtResource("1_mm0hj")
+gunshot_sound_radius = 150.0
+gunshot_sound_sfx = ExtResource("2_boad6")
 footstep_sfx = ExtResource("2_g6k8r")
 gun_cooldown_time = 1.0
 invuln_time = 0.09
@@ -1222,7 +1225,8 @@ y_sort_enabled = true
 texture_filter = 1
 position = Vector2(0, 5)
 sprite_frames = SubResource("SpriteFrames_2fgmn")
-animation = &"gun_idle_up"
+animation = &"gun_run_side"
+frame_progress = 0.97485316
 offset = Vector2(0, -10)
 
 [node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
@@ -1346,18 +1350,22 @@ collision_mask = 129
 [node name="RC_VENT_UP" type="RayCast2D" parent="."]
 position = Vector2(0, -3)
 target_position = Vector2(0, -6)
+collision_mask = 8193
 
 [node name="RC_VENT_DOWN" type="RayCast2D" parent="."]
 position = Vector2(0, -3)
 target_position = Vector2(0, 6)
+collision_mask = 8193
 
 [node name="RC_VENT_LEFT" type="RayCast2D" parent="."]
 position = Vector2(0, -3)
 target_position = Vector2(-6, 0)
+collision_mask = 8193
 
 [node name="RC_VENT_RIGHT" type="RayCast2D" parent="."]
 position = Vector2(0, -3)
 target_position = Vector2(6, 0)
+collision_mask = 8193
 
 [connection signal="area_entered" from="Hurtbox" to="." method="_on_hurtbox_area_entered"]
 [connection signal="area_exited" from="Hurtbox" to="." method="_on_hurtbox_area_exited"]

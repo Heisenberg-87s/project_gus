@@ -2,8 +2,16 @@ extends Node
 
 const SAVE_PATH := "user://save.json"
 
-func get_player():
+# ======================
+# Helpers
+# ======================
+func get_player() -> Node2D:
 	return get_tree().get_first_node_in_group("player")
+
+
+func get_gameplay() -> Node:
+	return get_tree().get_first_node_in_group("gameplay")
+
 
 func wait_for_player() -> Node2D:
 	var player: Node2D = get_player()
@@ -13,17 +21,34 @@ func wait_for_player() -> Node2D:
 	return player
 
 
-func save_game():
+# ======================
+# Save
+# ======================
+func save_game() -> void:
+	var gameplay = get_gameplay()
+	if gameplay == null:
+		push_error("SaveManager: NO GAMEPLAY FOUND")
+		return
+
+	if not gameplay.has_method("get_current_level_path"):
+		push_error("SaveManager: Gameplay has no get_current_level_path()")
+		return
+
+	var level_path: String = gameplay.get_current_level_path()
+	if level_path == "":
+		push_error("SaveManager: EMPTY LEVEL PATH")
+		return
+
 	var player: Node2D = get_player()
 	if player == null:
-		push_error("NO PLAYER FOUND")
+		push_error("SaveManager: NO PLAYER FOUND")
 		return
 
 	var pos: Vector2 = player.global_position
 	var facing: Vector2 = player.facing
 
 	var data: Dictionary = {
-		"scene": get_tree().current_scene.scene_file_path,
+		"scene": level_path, # ✅ level จริง
 		"player": {
 			"pos_x": pos.x,
 			"pos_y": pos.y,
@@ -39,37 +64,23 @@ func save_game():
 	file.store_string(JSON.stringify(data))
 	file.close()
 
+	print("[SaveManager] Saved game at:", level_path)
 
+
+# ======================
+# Load
+# ======================
 func has_save() -> bool:
-	var exists = FileAccess.file_exists(SAVE_PATH)
-	print("HAS SAVE ?", exists, " PATH =", SAVE_PATH)
 	return FileAccess.file_exists(SAVE_PATH)
 
 
-func load_game():
+func load_game() -> Dictionary:
 	if not FileAccess.file_exists(SAVE_PATH):
 		print("No save found.")
-		return
+		return {}
 
 	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
 	var data: Dictionary = JSON.parse_string(file.get_as_text())
 	file.close()
 
-	get_tree().change_scene_to_file(data["scene"])
-
-	var player: Node2D = await wait_for_player()
-	var p: Dictionary = data["player"]
-
-	player.global_position = Vector2(
-		float(p["pos_x"]),
-		float(p["pos_y"])
-	)
-
-	player.health = int(p["health"])
-	player.mode = int(p["mode"])
-	player.state = int(p["state"])
-
-	player.facing = Vector2(
-		float(p["facing_x"]),
-		float(p["facing_y"])
-	)
+	return data

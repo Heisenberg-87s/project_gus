@@ -25,9 +25,22 @@ func _on_continue_pressed() -> void:
 		buzz_sfx.play()
 		return
 
-	var data = await SaveManager.load_game()
+	var data: Dictionary = await SaveManager.load_game()
+	if data.is_empty():
+		buzz_sfx.play()
+		return
 
-	var gameplay = get_tree().get_first_node_in_group("gameplay")
+	var tree := get_tree()
+	tree.change_scene_to_file("res://Levels/gameplay.tscn")
+	await tree.scene_changed
+	await tree.process_frame
+
+	var gameplay := tree.get_first_node_in_group("gameplay")
+	if gameplay == null:
+		push_error("Continue: Gameplay not found")
+		return
+		
+	gameplay.is_loading_from_save = true
 	gameplay.load_from_save(data)
 
 

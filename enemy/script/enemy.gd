@@ -49,6 +49,7 @@ var muzzle: Marker2D = null
 
 # Stealth interaction
 @export var stealth_sneak_multiplier: float = 0.6
+@export var stealth_wall_cling_multiplier: float = 0.4
 @export var stealth_crawl_multiplier: float = 0.3
 @export var stealth_grass_crawl_multiplier: float = 0.0333
 @export var stealth_grass_crawl_override_distance: float = 10.0
@@ -56,6 +57,7 @@ var muzzle: Marker2D = null
 
 const PLAYER_STATE_SNEAK: int = 3
 const PLAYER_STATE_CRAWL: int = 4
+const PLAYER_STATE_WALL_CLING: int = 6
 
 @export var combat_scan: bool = true
 @export var combat_scan_interval: float = 0.45
@@ -461,20 +463,28 @@ func _update_animation() -> void:
 func _get_player_stealth_multiplier(player_node: Node) -> float:
 	if player_node == null or not is_instance_valid(player_node):
 		return 1.0
-	var p_state = null
-	p_state = player_node.get("state")
+
+	var p_state: int = int(player_node.get("state"))
 	if p_state == null:
 		return 1.0
-	if int(p_state) == PLAYER_STATE_CRAWL:
-		if player_node.has_method("is_in_grass") and player_node.is_in_grass():
-			if stealth_grass_crawl_override_distance > 0.0 and sight_distance > 0.0:
-				return stealth_grass_crawl_override_distance / sight_distance
-			return stealth_grass_crawl_multiplier
-	if int(p_state) == PLAYER_STATE_SNEAK:
-		return stealth_sneak_multiplier
-	if int(p_state) == PLAYER_STATE_CRAWL:
-		return stealth_crawl_multiplier
-	return 1.0
+
+	match int(p_state):
+		PLAYER_STATE_CRAWL:
+			if player_node.has_method("is_in_grass") and player_node.is_in_grass():
+				if stealth_grass_crawl_override_distance > 0.0 and sight_distance > 0.0:
+					return stealth_grass_crawl_override_distance / sight_distance
+				return stealth_grass_crawl_multiplier
+			return stealth_crawl_multiplier
+
+		PLAYER_STATE_SNEAK:
+			return stealth_sneak_multiplier
+
+		PLAYER_STATE_WALL_CLING:
+			return stealth_wall_cling_multiplier
+
+		_:
+			return 1.0
+
 
 # ----------------------------------------------------------------
 func _update_sight_visual_and_detection() -> void:
@@ -902,7 +912,7 @@ func _end_stun() -> void:
 	_stun_cooldown_timer = cd
 
 func hit(duration: float) -> void:
-	if is_stunned or is_hit:
+	if is_hit:
 		return
 	is_hit = true
 	velocity = Vector2.ZERO
@@ -935,6 +945,8 @@ func _end_hit() -> void:
 		print("Enemy:", name, "hit ended -> hearing restored")
 
 # ---------- Sound reaction ----------
+# Replace the existing on_sound_detected function with this version.
+
 func on_sound_detected(player: Node, sound_position: Vector2) -> void:
 	# If stunned or currently in 'hit' state (and feature enabled), ignore sound detection.
 	if is_stunned or (is_hit and disable_hearing_while_hit):
@@ -948,7 +960,7 @@ func on_sound_detected(player: Node, sound_position: Vector2) -> void:
 	else:
 		_last_known_player_pos = global_position
 
-	# immediate CAUTION/COMBAT (no countdown)
+	# immediate CAUTION/COMBAT for this enemy only
 	ai_state = AIState.COMBAT
 	_pause_on_reach = true
 	_set_caution_active(true)
@@ -963,8 +975,32 @@ func on_sound_detected(player: Node, sound_position: Vector2) -> void:
 	_set_facing_toward_point_continuous(_last_known_player_pos)
 	_update_animation()
 	emit_signal("player_spotted", player)
-	if get_tree() != null:
-		get_tree().call_group("enemies", "_on_alert_received", _last_known_player_pos, self)
+
+	# Propagate alert only to nearby enemies (instead of broadcasting to all).
+	# Tunable: choose a reasonable radius for propagation (e.g., 300-600).
+	var PROPAGATE_RADIUS: float = 400.0
+
+	var enemies_arr = get_tree().get_nodes_in_group("enemies")
+	for e in enemies_arr:
+		if e == null:
+			continue
+		if e == self:
+			continue
+		if not is_instance_valid(e):
+			continue
+		# ensure node has the handler
+		if not e.has_method("_on_alert_received"):
+			continue
+		# check distance to the sound (or to this enemy) before alerting
+		var dist = 0.0
+		# prefer using the sound origin if available
+		if sound_position != Vector2.ZERO:
+			dist = (e as Node2D).global_position.distance_to(sound_position)
+		else:
+			dist = (e as Node2D).global_position.distance_to(global_position)
+		if dist <= PROPAGATE_RADIUS:
+			# pass self as instigator (so the recipient can ignore if needed)
+			e.call_deferred("_on_alert_received", _last_known_player_pos, self)
 
 # ----------------------------------------------------------------
 func _handle_detect_state(delta: float) -> void:

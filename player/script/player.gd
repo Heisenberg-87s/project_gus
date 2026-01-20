@@ -71,6 +71,14 @@ const SOUND_AREA_SCENE = preload("res://player/sound_area.tscn")
 @export var sound_emit_cooldown_time: float = 1.2
 var _sound_emit_cooldown_timer: float = 0.0
 
+# ==== SHOOT SOUND AREA =====
+const SHOOT_AREA_SCENE = preload("res://player/player_shoot_area.tscn")
+
+@export var gunshot_sound_radius: float = 500.0
+@export var gunshot_sound_duration: float = 0.25
+@export var gunshot_sound_sfx: AudioStream = null  # ถ้าไม่มีจะ fallback ไปใช้ sound_emit_sfx
+
+
 # ===== Footstep sound detect (auto) =====
 @export var footstep_enabled: bool = true
 @export var footstep_radius_walk: float = 100.0
@@ -93,9 +101,9 @@ var facing: Vector2 = Vector2.DOWN
 
 # ===== WALL CLING CONFIG (exported so editable in Inspector) =====
 @export var wall_cling_enabled: bool = true
-@export var wall_cling_push_distance: float = 24.0
+@export var wall_cling_push_distance: float = 1.0
 @export var wall_cling_peek_offset: float = 100.0
-@export var wall_cling_push_speed: float = 320.0
+@export var wall_cling_push_speed: float = 1.0
 @export var wall_cling_camera_time: float = 0.18
 # default allowed states (but we'll also require mode == Mode.NORMAL)
 @export var wall_cling_allowed_states: Array = [State.IDLE, State.WALK, State.RUN, State.SNEAK]
@@ -258,6 +266,7 @@ func _ready() -> void:
 		if stand_blocked_sfx != null:
 			_stand_blocked_player.stream = stand_blocked_sfx
 		add_child(_stand_blocked_player)
+		
 
 # -------------------------
 # Helper: apply modulate with blink + base alpha preserved
@@ -414,15 +423,32 @@ func _process(delta: float) -> void:
 				_crouch_pending_stand = true
 				_crouch_delay_timer = lerp(stand_from_crouch_delay_min, stand_from_crouch_delay_max, randf())
 
-	# decrement crouch pending timer
+# แทนบล็อกเดิมที่คุณมีใน _process
 	if _crouch_pending_stand and _crouch_delay_timer > 0.0:
 		_crouch_delay_timer = max(_crouch_delay_timer - delta, 0.0)
 		if _crouch_delay_timer <= 0.0:
 			_crouch_pending_stand = false
-			if _set_state(true):
-				_select_muzzle_for_cardinal(cardinal_direction)
-				_update_animation(true)
-				_update_hurtbox_shape(true)
+			# If player was crawling and we attempt to auto-stand, ensure clearance first
+			if state == State.CRAWL:
+				if not can_stand():
+					# blocked: play feedback and remain crawling
+					_play_stand_blocked_feedback()
+					_want_crawl = true
+					_want_sneak = false
+					_crouch_pending_stand = false
+					_crouch_delay_timer = 0.0
+					_posture_toggle_request = 0
+				else:
+					if _set_state(true):
+						_select_muzzle_for_cardinal(cardinal_direction)
+						_update_animation(true)
+						_update_hurtbox_shape(true)
+			else:
+				# not crawling (e.g., coming from SNEAK) — proceed normally
+				if _set_state(true):
+					_select_muzzle_for_cardinal(cardinal_direction)
+					_update_animation(true)
+					_update_hurtbox_shape(true)
 
 	# Reduce suppression timer for footsteps after exiting cling
 	if _suppress_footstep_after_exit_timer > 0.0:
@@ -580,14 +606,49 @@ func _apply_posture_toggle_request() -> void:
 
 	match _posture_toggle_request:
 		1:
-			# Toggle (short press): stand/sneak logic
-			# If currently crawling and player requests to stand -> check clearance
+			# Short press
+			# Behavior:
+			# - If currently crawling: short press -> SNEAK (but only if standing/clearance allows)
+			# - If currently sneak: short-press -> stand
+			# - Otherwise (standing): short-press -> sneak
+			if state == State.CRAWL:
+				# From CRAWL: short press -> SNEAK, but only if there's vertical clearance.
+				# If can_stand() is false, block (don't allow sneak) so player remains crawling.
+				if not can_stand():
+					_play_stand_blocked_feedback()
+					# keep crawling
+					_want_crawl = true
+					_want_sneak = false
+					_crouch_pending_stand = false
+					_crouch_delay_timer = 0.0
+					_posture_toggle_request = 0
+					return
+				# space available -> go to sneak
+				_want_crawl = false
+				_want_sneak = true
+				# cancel any pending automatic stand
+				_crouch_pending_stand = false
+				_crouch_delay_timer = 0.0
+			elif state == State.SNEAK:
+				# From SNEAK: short press -> STAND (normal behavior)
+				_want_sneak = false
+				_want_crawl = false
+			else:
+				# From STAND/WALK/RUN: short press -> SNEAK
+				_want_sneak = true
+				_want_crawl = false
+		2:
+			# Long hold
+			# Behavior:
+			# - If currently crawling: long-hold -> attempt to STAND (check clearance)
+			# - If currently sneak: long-hold -> go to CRAWL
+			# - Otherwise (standing): long-hold -> CRAWL
 			if state == State.CRAWL:
 				# Attempt to stand: check with vent rays
 				if not can_stand():
 					# Block standing: keep crawling and play feedback (sound/effect)
 					_play_stand_blocked_feedback()
-					# ensure we remain wanting crawl (prevents pending timer from forcing stand)
+					# ensure we remain wanting crawl
 					_want_crawl = true
 					_want_sneak = false
 					_crouch_pending_stand = false
@@ -599,29 +660,11 @@ func _apply_posture_toggle_request() -> void:
 					_want_sneak = false
 					_want_crawl = false
 			elif state == State.SNEAK:
-				# if currently sneak and short-press -> toggle off crouch (stand)
+				# From SNEAK: long-hold -> go to CRAWL
+				_want_crawl = true
 				_want_sneak = false
-				_want_crawl = false
 			else:
-				_want_sneak = true
-				_want_crawl = false
-		2:
-			# Long hold: normally request crawl. But if player is already crawling,
-			# some systems treat long-hold as "cancel crawl" — keep behavior but check clearance.
-			if state == State.CRAWL:
-				# When already crawling and long-hold requested to stand -> check clearance too.
-				if not can_stand():
-					_play_stand_blocked_feedback()
-					_want_crawl = true
-					_want_sneak = false
-					_crouch_pending_stand = false
-					_crouch_delay_timer = 0.0
-					_posture_toggle_request = 0
-					return
-				else:
-					_want_sneak = false
-					_want_crawl = false
-			else:
+				# From STAND/WALK/RUN: long-hold -> go to CRAWL
 				_want_crawl = true
 				_want_sneak = false
 		-1:
@@ -687,6 +730,8 @@ func _set_state(force: bool=false) -> bool:
 # -------------------------------------------------------------
 
 func _start_punch() -> void:
+	if state == State.CRAWL or _is_wall_clinging:
+		return
 	if mode != Mode.NORMAL: return
 	_punch_timer = punch_duration
 	_punch_cooldown_timer = punch_cooldown
@@ -743,6 +788,8 @@ func _do_punch_hit() -> void:
 	get_tree().current_scene.add_child(pa)
 
 func _try_shoot() -> void:
+	if state == State.CRAWL or _is_wall_clinging:
+		return
 	if mode != Mode.GUN or _gun_cooldown > 0.0:
 		return
 	_gun_cooldown = gun_cooldown_time
@@ -756,6 +803,22 @@ func _try_shoot() -> void:
 	else:
 		bullet.rotation = dir.angle()
 	get_tree().current_scene.add_child(bullet)
+
+	# spawn shoot-area so nearby enemies hear the gunshot (like SoundArea)
+	var sa = null
+	if SHOOT_AREA_SCENE != null:
+		sa = SHOOT_AREA_SCENE.instantiate()
+	else:
+		# fallback to the existing sound_area scene used for footsteps
+		sa = SOUND_AREA_SCENE.instantiate()
+	sa.global_position = pos
+	# ใช้ค่าที่ export ไว้ (ปรับได้ใน Inspector)
+	sa.radius = gunshot_sound_radius
+	sa.duration = gunshot_sound_duration
+	sa.source_player = self
+	sa.sound_sfx = gunshot_sound_sfx if gunshot_sound_sfx != null else sound_emit_sfx
+	get_tree().current_scene.add_child(sa)
+
 	var shoot_anim_candidates: Array = [
 		"gun_shoot_" + _anim_dir_str(), "gun_shoot",
 		"shoot_" + _anim_dir_str(), "shoot"
@@ -1356,35 +1419,43 @@ func load_state(data: Dictionary) -> void:
 #   RC_VENT_UP, RC_VENT_DOWN, RC_VENT_LEFT, RC_VENT_RIGHT
 # If a RayCast2D node is missing we treat it as "not colliding" (safe). You can change to strict mode if desired.
 func can_stand() -> bool:
-	# Ensure raycasts are enabled (they should be enabled in the editor)
-	# read ray hits (treat missing rays as not colliding)
-	var up_hit: bool = rc_vent_up != null and rc_vent_up.is_colliding()
-	var down_hit: bool = rc_vent_down != null and rc_vent_down.is_colliding()
-	var left_hit: bool = rc_vent_left != null and rc_vent_left.is_colliding()
-	var right_hit: bool = rc_vent_right != null and rc_vent_right.is_colliding()
+	# Safety: ensure raycasts exist and are enabled
+	var up_hit: bool = false
+	var down_hit: bool = false
+	var left_hit: bool = false
+	var right_hit: bool = false
 
-	# If both vertical directions blocked -> cannot stand (e.g., trapped vertically)
+	if rc_vent_up != null:
+		if not rc_vent_up.enabled:
+			rc_vent_up.enabled = true
+			if rc_vent_up.has_method("force_raycast_update"):
+				rc_vent_up.force_raycast_update()
+		up_hit = rc_vent_up.is_colliding()
+	if rc_vent_down != null:
+		if not rc_vent_down.enabled:
+			rc_vent_down.enabled = true
+			if rc_vent_down.has_method("force_raycast_update"):
+				rc_vent_down.force_raycast_update()
+		down_hit = rc_vent_down.is_colliding()
+	if rc_vent_left != null:
+		if not rc_vent_left.enabled:
+			rc_vent_left.enabled = true
+			if rc_vent_left.has_method("force_raycast_update"):
+				rc_vent_left.force_raycast_update()
+		left_hit = rc_vent_left.is_colliding()
+	if rc_vent_right != null:
+		if not rc_vent_right.enabled:
+			rc_vent_right.enabled = true
+			if rc_vent_right.has_method("force_raycast_update"):
+				rc_vent_right.force_raycast_update()
+		right_hit = rc_vent_right.is_colliding()
+
+	# debug (ชั่วคราว ถ้าต้องการ)
+	# print("can_stand: up=", up_hit, " down=", down_hit, " left=", left_hit, " right=", right_hit)
+
+	# Block if both vertical blocked OR both horizontal blocked (ตามนโยบายของคุณ)
 	if up_hit and down_hit:
 		return false
-
-	# If both horizontal directions blocked -> cannot stand (e.g., tight horizontal vent)
 	if left_hit and right_hit:
 		return false
-
-	# Otherwise at least one direction of each opposing pair is free -> allow stand
 	return true
-
-# =============================
-# End of can_stand()
-# =============================
-
-# ========== HURTBOX SHAPE SWITCHING CONTINUED (remaining code where needed) ==========
-# (rest of the script already above handles animations / collisions)
-# -------------------------------------------------------------------------
-# Notes:
-# - Add 4 RayCast2D nodes to your Player scene, named exactly:
-#     RC_VENT_UP, RC_VENT_DOWN, RC_VENT_LEFT, RC_VENT_RIGHT
-#   Make sure each RayCast2D.enabled = true and the cast_to length samples the clearance area you care about.
-# - The posture toggle logic (_apply_posture_toggle_request) now calls can_stand() before allowing CRAWL -> stand.
-# - If can_stand() returns false, the player remains in CRAWL and gets a short feedback (sound/flash).
-# -------------------------------------------------------------------------

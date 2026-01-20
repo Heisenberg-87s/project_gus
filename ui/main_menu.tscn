@@ -14,6 +14,34 @@ Button/colors/font_color = Color(1, 1, 1, 1)
 Button/font_sizes/font_size = 35
 Button/styles/normal = SubResource("StyleBoxFlat_rmr83")
 
+[sub_resource type="Animation" id="Animation_8uxxo"]
+resource_name = "Menu"
+length = 0.3267
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("VBoxContainer/Start:theme_override_colors/font_color")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.16666667, 0.3267),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Color(0.7046444, 0, 0.063278556, 1), Color(1, 1, 0.1490196, 1), Color(0.7058824, 0, 0.0627451, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("StartSFX:playing")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+
 [sub_resource type="Animation" id="Animation_rmr83"]
 resource_name = "MenuFade"
 length = 3.0
@@ -141,34 +169,6 @@ tracks/4/keys = {
 "values": [Color(0.19076231, 0.19076234, 0.19076231, 1)]
 }
 
-[sub_resource type="Animation" id="Animation_8uxxo"]
-resource_name = "Menu"
-length = 0.3267
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("VBoxContainer/Start:theme_override_colors/font_color")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.16666667, 0.3267),
-"transitions": PackedFloat32Array(1, 1, 1),
-"update": 0,
-"values": [Color(0.7046444, 0, 0.063278556, 1), Color(1, 1, 0.1490196, 1), Color(0.7058824, 0, 0.0627451, 0)]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("StartSFX:playing")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [true]
-}
-
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_8uxxo"]
 _data = {
 &"Menu": SubResource("Animation_8uxxo"),
@@ -231,7 +231,6 @@ text = "PRESS SPACE"
 
 [node name="Theme" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("3_wk0pr")
-autoplay = true
 parameters/looping = true
 
 [node name="StartSFX" type="AudioStreamPlayer2D" parent="."]

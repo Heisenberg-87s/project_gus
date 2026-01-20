@@ -763,7 +763,7 @@ tile_set = SubResource("TileSet_t6g7y")
 polygon = PackedVector2Array(-1128, 21, -655, 21, -651, 56, -536, 57, -531, 24, -284, 25, -253, -5, 38, -11, 41, 214, 250, 220, 252, 143, 291, 52, 406, 53, 466, 20, 492, -9, 597, -7, 600, -46, 54, -43, -43, -109, -1127, -106)
 
 [node name="DialogueArea" parent="." instance=ExtResource("11_1shrj")]
-position = Vector2(1218, 463)
+position = Vector2(1065, 472)
 dialogue = ExtResource("10_wmvu1")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DialogueArea"]

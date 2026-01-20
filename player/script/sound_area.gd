@@ -1,5 +1,5 @@
 extends Area2D
-class_name SoundArea
+class_name ShootArea
 
 # SoundArea: short-lived Area2D used for "sound detection"
 # - Spawned by player when pressing the sound-detect button (V)
@@ -7,7 +7,7 @@ class_name SoundArea
 # - When overlapping enemy hurtboxes, notifies the enemy so it can walk/investigate the player that made the sound
 
 @export var duration: float = 0.25
-@export var radius: float = 300.0
+@export var radius: float = 100.0
 
 # Optional: AudioStream to play when this SoundArea is spawned.
 # Assign from Player when instancing, e.g.:

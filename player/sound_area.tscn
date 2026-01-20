@@ -5,6 +5,7 @@
 [ext_resource type="AudioStream" uid="uid://h5qy1cw7r6b7" path="res://assets/audio/footstep.ogg" id="3_n3e65"]
 
 [node name="SoundArea" type="Area2D"]
+visible = false
 collision_layer = 32
 collision_mask = 4
 script = ExtResource("1_1ricc")

@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=4 uid="uid://ptmvawkn2pxu"]
+[gd_scene load_steps=14 format=4 uid="uid://ptmvawkn2pxu"]
 
 [ext_resource type="Texture2D" uid="uid://1etdfknemrkf" path="res://assets/MGSGB Tileset.png" id="1_j7ig2"]
 [ext_resource type="Script" uid="uid://bqkq8pmqg8bu2" path="res://Levels/level.gd" id="1_sjfwq"]
@@ -615,6 +615,15 @@ tile_size = Vector2i(64, 64)
 sources/0 = SubResource("TileSetAtlasSource_51dxk")
 sources/1 = SubResource("TileSetAtlasSource_qgg36")
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sjfwq"]
+size = Vector2(413, 70)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_mwrhi"]
+size = Vector2(51, 156)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_uptls"]
+size = Vector2(94, 36)
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_51dxk"]
 size = Vector2(34, 20)
 
@@ -639,6 +648,22 @@ tile_map_data = PackedByteArray("AAAFAAUAAQALAAsAAAAFAAQAAQALAAsAAAAFAAMAAQALAAs
 tile_set = SubResource("TileSet_is18p")
 
 [node name="Floor" type="TileMapLayer" parent="."]
+
+[node name="VentArea" type="StaticBody2D" parent="."]
+collision_layer = 8192
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="VentArea"]
+position = Vector2(576.5, 159)
+shape = SubResource("RectangleShape2D_sjfwq")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="VentArea"]
+position = Vector2(803, 256)
+shape = SubResource("RectangleShape2D_mwrhi")
+
+[node name="CollisionShape2D3" type="CollisionShape2D" parent="VentArea"]
+position = Vector2(736, 353)
+shape = SubResource("RectangleShape2D_uptls")
 
 [node name="Walls" type="StaticBody2D" parent="."]
 
