@@ -19,6 +19,10 @@ func _ready() -> void:
 	# listen for nodes removed (cleanup _caution_set)
 	get_tree().connect("node_removed", Callable(self, "_on_node_removed"))
 
+	# Ensure caution_label is hidden (we use an image background instead)
+	if caution_label != null:
+		caution_label.visible = false
+
 	_safe_set_visible(false)
 
 func _try_resolve_labels() -> void:
@@ -58,8 +62,7 @@ func _safe_set_visible(v: bool) -> void:
 		visible = v
 	if combat_label != null:
 		combat_label.visible = v
-	if caution_label != null:
-		caution_label.visible = v
+	# caution_label intentionally not toggled here (we use image background instead)
 	if timer_label != null:
 		timer_label.visible = v
 
@@ -115,9 +118,7 @@ func _update_ui_visibility() -> void:
 	# Basic visibility based on _caution_set
 	if _caution_set.size() > 0:
 		_safe_set_visible(true)
-		if caution_label != null:
-			caution_label.visible = true
-			caution_label.text = "CAUTION"
+		# caution_label removed from visible flow — background image used instead
 	else:
 		if caution_label != null:
 			caution_label.visible = false
@@ -189,8 +190,7 @@ func _process(_delta: float) -> void:
 		if timer_label != null:
 			timer_label.visible = true
 			timer_label.text = "%05.2f" % clamp(mapped_value, 0.0, COMBAT_DISPLAY_VALUE)
-		if caution_label != null:
-			caution_label.visible = true
+		# caution_label intentionally not shown; background image will represent caution state
 		if combat_label != null:
 			combat_label.visible = false
 		visible = true

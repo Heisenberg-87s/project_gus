@@ -1,6 +1,11 @@
 extends CharacterBody2D
 class_name Enemy
 
+# ====== AnimationPlayer ======
+@onready var anim: AnimationPlayer = $AnimationPlayer
+@onready var tex: TextureRect = $TextureRect
+
+
 # การเคลื่อนที่ / ลาดตระเวน
 @export var speed: float = 120.0
 @export var acceleration: float = 1400.0
@@ -202,6 +207,7 @@ func _ready() -> void:
 			print("Enemy: Agent navigation_layers =", agent.navigation_layers)
 		else:
 			print("Enemy: Agent available but 'navigation_layers' property not found (check Godot version).")
+	tex.visible = false
 
 # ----------------------------------------------------------------
 func _physics_process(delta: float) -> void:
@@ -582,6 +588,7 @@ func _set_caution_active(active: bool) -> void:
 func _on_player_spotted(player: Node) -> void:
 	_last_known_player_pos = (player as Node2D).global_position
 	_set_facing_toward_point_continuous(_last_known_player_pos)
+	anim.play("alert")
 	_update_animation()
 
 	# Enter COMBAT (acts as CAUTION phase). Do not start countdown here.

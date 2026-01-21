@@ -12,7 +12,7 @@
 
 [node name="Gameplay" type="Node2D" groups=["gameplay"]]
 script = ExtResource("1_xvsls")
-initial_level_scene_path = "res://Levels/lobby_1t.tscn"
+initial_level_scene_path = "res://Levels/cliff.tscn"
 
 [node name="LevelHolder" type="Node2D" parent="."]
 process_mode = 1
