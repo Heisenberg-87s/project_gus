@@ -5,6 +5,7 @@ class_name Enemy
 @onready var anim: AnimationPlayer = $AnimationPlayer
 @onready var tex: TextureRect = $TextureRect
 
+@onready var shoot_sfx: AudioStreamPlayer2D = $ShootSFX
 
 # การเคลื่อนที่ / ลาดตระเวน
 @export var speed: float = 120.0
@@ -27,7 +28,7 @@ var _search_scan_index: int = 0
 const _SEARCH_SCAN_DIRS: Array = [Vector2.RIGHT, Vector2.UP, Vector2.LEFT, Vector2.DOWN]
 var _search_is_scanning: bool = false
 var _search_scan_dir_timer: float = 0.45
-
+var shoot_cd := false
 # -----------------------
 # การตั้งค่าการมอง/การตรวจจับ
 # -----------------------
@@ -1042,11 +1043,24 @@ func _get_player_node() -> Node:
 
 # ---------- Shooting helpers ----------
 func _shoot_at_player(player_node: Node) -> void:
+	if shoot_cd:
+		return
 	if player_node == null or not is_instance_valid(player_node):
 		return
-	var target_pos = _get_player_aim_position(player_node)
+
+	shoot_cd = true
+
+	var target_pos := _get_player_aim_position(player_node)
+	var dir := (target_pos - global_position).normalized()
+
+	_play_shoot_anim(dir)
+	_play_shoot_sfx()
 	_shoot_at_position(target_pos)
 
+	await get_tree().create_timer(0.15).timeout
+	shoot_cd = false
+	
+	
 func _shoot_at_position(target_pos: Vector2) -> void:
 	var origin = global_position
 	var muzzle_rot = 0.0
@@ -1231,9 +1245,22 @@ func enter_caution_from_transfer(target_position: Vector2) -> void:
 	_stun_track_player = false
 	_stun_track_node = null
 
-# --- และใน _enter_evasion_state() ให้เพิ่มบรรทัดนี้หลังเปลี่ยน ai_state = AIState.EVASION ---
-# var gs = get_node_or_null("/root/GameState")
-# if gs != null and gs.has_method("start_global_caution"):
-#     gs.start_global_caution(_evasion_time_left)
+# ======== Shoot Anim =========
+func _play_shoot_anim(dir: Vector2) -> void:
+	if abs(dir.x) > abs(dir.y):
+		if dir.x > 0:
+			_anim.play("shoot_right")
+		else:
+			_anim.play("shoot_left")
+	else:
+		if dir.y > 0:
+			_anim.play("shoot_down")
+		else:
+			_anim.play("shoot_up")
+
+func _play_shoot_sfx() -> void:
+	if shoot_sfx:
+		shoot_sfx.play()
+
 
 # End of file

@@ -1,8 +1,9 @@
-[gd_scene load_steps=13 format=3 uid="uid://du17cyxj54hum"]
+[gd_scene load_steps=20 format=3 uid="uid://du17cyxj54hum"]
 
 [ext_resource type="Script" uid="uid://drjnq1cv6jx4y" path="res://Dialogue/codec.gd" id="1_4nldh"]
 [ext_resource type="PackedScene" uid="uid://ckvgyvclnwggo" path="res://addons/dialogue_manager/dialogue_label.tscn" id="2_a8ve6"]
 [ext_resource type="Texture2D" uid="uid://do8o7y2fgqdsa" path="res://assets/Characters/Shadow/portrait.png" id="2_jgwlt"]
+[ext_resource type="Texture2D" uid="uid://bohrhmes48yc" path="res://assets/SKIP_TEXT.png" id="3_4nldh"]
 [ext_resource type="Script" uid="uid://bb52rsfwhkxbn" path="res://addons/dialogue_manager/dialogue_responses_menu.gd" id="3_72ixx"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_spyqn"]
@@ -62,6 +63,52 @@ MarginContainer/constants/margin_right = 30
 MarginContainer/constants/margin_top = 15
 PanelContainer/styles/panel = SubResource("StyleBoxFlat_qkmqt")
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_k043q"]
+atlas = ExtResource("3_4nldh")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_euhtl"]
+atlas = ExtResource("3_4nldh")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hq1ej"]
+atlas = ExtResource("3_4nldh")
+region = Rect2(0, 48, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hhkyq"]
+atlas = ExtResource("3_4nldh")
+region = Rect2(48, 48, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hn05e"]
+atlas = ExtResource("3_4nldh")
+region = Rect2(0, 96, 48, 48)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_j3acb"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_k043q")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_euhtl")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hq1ej")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hq1ej")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hhkyq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hn05e")
+}],
+"loop": true,
+"name": &"default",
+"speed": 7.0
+}]
+
 [sub_resource type="Animation" id="Animation_nlsx6"]
 length = 0.001
 tracks/0/type = "bezier"
@@ -116,7 +163,7 @@ theme = SubResource("Theme_qq3yp")
 layout_mode = 0
 offset_right = 1280.0
 offset_bottom = 720.0
-color = Color(0, 0, 0, 0.62352943)
+color = Color(0, 0, 0, 0.8117647)
 
 [node name="Profile" type="TextureRect" parent="Balloon"]
 custom_minimum_size = Vector2(200, 250)
@@ -149,6 +196,13 @@ offset_bottom = 360.0
 theme_override_font_sizes/normal_font_size = 49
 text = "•၊၊||၊|။||||။၊|။•
 095.40"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Balloon"]
+position = Vector2(1190, 670)
+scale = Vector2(3, 3)
+sprite_frames = SubResource("SpriteFrames_j3acb")
+autoplay = "default"
+frame_progress = 0.029816754
 
 [node name="MarginContainer" type="MarginContainer" parent="Balloon"]
 layout_mode = 1
@@ -195,6 +249,7 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_font_sizes/normal_font_size = 25
 text = "Dialogue..."
+skip_action = &"skip_dialogue"
 
 [node name="Control" type="Control" parent="Balloon/MarginContainer/PanelContainer/MarginContainer/HBoxContainer"]
 custom_minimum_size = Vector2(20, 10)

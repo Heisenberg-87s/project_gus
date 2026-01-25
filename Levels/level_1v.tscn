@@ -672,7 +672,7 @@ polygon = PackedVector2Array(369, 177, 369.00003, 384.0564, 335, 384, 335, -64, 
 
 [node name="ventsotuh" parent="." instance=ExtResource("4_mwrhi")]
 position = Vector2(345, 389)
-target_scene_path = "res://Levels/level_1t.tscn"
+target_scene_path = "res://Levels/level_1t_a.tscn"
 target_entry_name = "EntryNorth"
 door_name = "VentNorth"
 
@@ -685,7 +685,7 @@ position = Vector2(7, -20)
 
 [node name="ventnorth2" parent="." instance=ExtResource("4_mwrhi")]
 position = Vector2(672, 316)
-target_scene_path = "res://Levels/level_1t.tscn"
+target_scene_path = "res://Levels/level_1t_a.tscn"
 target_entry_name = "EntrySouth"
 door_name = "VentSouth"
 

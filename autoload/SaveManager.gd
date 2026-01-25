@@ -1,6 +1,8 @@
 extends Node
 
 const SAVE_PATH := "user://save.json"
+var is_continue: bool = false
+var pending_continue_data: Dictionary = {}
 
 # ======================
 # Helpers

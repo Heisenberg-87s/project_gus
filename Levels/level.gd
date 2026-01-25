@@ -4,7 +4,6 @@ class_name LevelBase
 
 signal request_scene_change(target_scene_path: String, target_entry_name: String, door_name: String)
 
-@onready var player = $Player
 
 
 func _ready() -> void:
@@ -81,7 +80,14 @@ func _deferred_place_player(player_node: Node, marker_node: Node, handoff: Level
 
 	# After player is placed, if GameState autoload indicates a transfer-caution, notify enemies in this newly-loaded level
 	call_deferred("_handle_transfer_caution")
+	
+	if get_tree().get_first_node_in_group("gameplay"):
+		var gp = get_tree().get_first_node_in_group("gameplay")
+		if gp.has_method("_post_level_player_ready"):
+			gp.call_deferred("_post_level_player_ready")
 
+	
+	
 func _handle_transfer_caution() -> void:
 	var gs = get_node_or_null("/root/GameState")
 	if gs == null:
@@ -133,4 +139,18 @@ func _find_node_by_name(start_node: Node, target_name: String) -> Node:
 			var found := _find_node_by_name(child, target_name)
 			if found:
 				return found
+	return null
+
+# ====== Try to spawn on spawnpoint ======
+func find_spawnpoint() -> Node2D:
+	for n in find_children("*", "Marker2D", true):
+		if n.name == "spawnpoint":
+			return n
+	return null
+
+# ====== Check if has level camera  =======
+func find_level_camera() -> Camera2D:
+	for n in find_children("*", "Camera2D", true):
+		if n is Camera2D:
+			return n
 	return null

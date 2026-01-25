@@ -1,6 +1,10 @@
 extends CanvasLayer
 ## A basic dialogue balloon for use with Dialogue Manager.
+var is_skipping := false
+var skip_speed := 9999.0
+var normal_speed := 1.0
 
+var skip_held := false
 
 ## The dialogue resource
 @export var dialogue_resource: DialogueResource
@@ -15,7 +19,7 @@ extends CanvasLayer
 @export var next_action: StringName = &"ui_accept"
 
 ## The action to use to skip typing the dialogue
-@export var skip_action: StringName = &"ui_cancel"
+@export var skip_action: StringName = &"skip_dialogue"
 
 ## A sound player for voice lines (if they exist).
 @onready var audio_stream_player: AudioStreamPlayer = %AudioStreamPlayer
@@ -88,13 +92,21 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	if skip_held:
+		_skip_to_next()
+		
 	if is_instance_valid(dialogue_line):
 		progress.visible = not dialogue_label.is_typing and dialogue_line.responses.size() == 0 and not dialogue_line.has_tag("voice")
+		
 
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed(skip_action):
+		skip_held = true
+		get_viewport().set_input_as_handled()
+		_skip_to_next()
 
-func _unhandled_input(_event: InputEvent) -> void:
-	# Only the balloon is allowed to handle input while it's showing
-	get_viewport().set_input_as_handled()
+	elif event.is_action_released(skip_action):
+		skip_held = false
 
 
 func _notification(what: int) -> void:
@@ -198,10 +210,17 @@ func _on_mutated(_mutation: Dictionary) -> void:
 
 func _on_balloon_gui_input(event: InputEvent) -> void:
 	# See if we need to skip typing of the dialogue
+	if event.is_action_pressed(skip_action):
+		get_viewport().set_input_as_handled()
+		skip_held = true
+		_skip_to_next()
+		return
+	if event.is_action_released(skip_action):
+		skip_held = false
+		
 	if dialogue_label.is_typing:
 		var mouse_was_clicked: bool = event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.is_pressed()
-		var skip_button_was_pressed: bool = event.is_action_pressed(skip_action)
-		if mouse_was_clicked or skip_button_was_pressed:
+		if mouse_was_clicked:
 			get_viewport().set_input_as_handled()
 			dialogue_label.skip_typing()
 			return
@@ -220,6 +239,16 @@ func _on_balloon_gui_input(event: InputEvent) -> void:
 
 func _on_responses_menu_response_selected(response: DialogueResponse) -> void:
 	next(response.next_id)
+
+func _skip_to_next() -> void:
+	if dialogue_label.is_typing:
+		dialogue_label.skip_typing()
+		return
+
+	if is_waiting_for_input and dialogue_line.responses.size() == 0:
+		next(dialogue_line.next_id)
+
+
 
 
 #endregion

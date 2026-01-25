@@ -5,6 +5,8 @@ signal codec_ready
 @onready var anim: AnimationPlayer = $AnimationPlayer
 var active := false
 
+
+
 func _ready() -> void:
 	visible = false
 	anim.animation_finished.connect(_on_animation_finished)
@@ -22,6 +24,9 @@ func play_codec():
 		var levelholder = gameplay.get_node("LevelHolder")
 		levelholder.process_mode = Node.PROCESS_MODE_DISABLED
 	anim.play("codec_call")
+	
+# ======= skip dialogue ============
+
 
 func _on_animation_finished(name: StringName) -> void:
 	if name == "codec_call":
@@ -39,3 +44,4 @@ func _on_dialogue_ended(_res):
 	if gameplay:
 		var levelholder = gameplay.get_node("LevelHolder")
 		levelholder.process_mode = Node.PROCESS_MODE_INHERIT
+		

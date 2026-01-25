@@ -150,6 +150,8 @@ var health: int = 100
 @export var invuln_time: float = 2.0
 var _invuln_timer: float = 0.0
 
+signal player_spawned(player)
+
 signal died
 
 signal weapon_mode_changed(new_mode: int)
@@ -211,6 +213,7 @@ var _hurtbox_original_pos: Vector2 = Vector2.ZERO
 var _stand_blocked_player: AudioStreamPlayer2D = null
 
 func _ready() -> void:
+	emit_signal("player_spawned", self)
 	print("[Player] _ready called in scene:", get_tree().current_scene.name)
 	call_deferred("_apply_scene_manager_spawn")
 	add_to_group("player")
