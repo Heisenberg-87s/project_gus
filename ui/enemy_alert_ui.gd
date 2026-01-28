@@ -3,10 +3,12 @@ extends Control
 @onready var combat_label: Label = get_node_or_null("PanelContainer/ColorRect/VBoxContainer/CombatLabel") as Label
 @onready var caution_label: Label = get_node_or_null("PanelContainer/ColorRect/VBoxContainer/CautionLabel") as Label
 @onready var timer_label: Label = get_node_or_null("PanelContainer/ColorRect/VBoxContainer/TimerLabel") as Label
+@onready var caution_sound: AudioStreamPlayer = $CautionSound
 
 const COMBAT_DISPLAY_VALUE: float = 99.99
 
 var _caution_set: Array = []
+
 
 func _ready() -> void:
 	_try_resolve_labels()
@@ -18,7 +20,11 @@ func _ready() -> void:
 	get_tree().connect("node_added", Callable(self, "_on_node_added"))
 	# listen for nodes removed (cleanup _caution_set)
 	get_tree().connect("node_removed", Callable(self, "_on_node_removed"))
-
+	
+	var player = get_tree().get_first_node_in_group("player")
+	if player and player.has_signal("died"):
+		player.connect("died", Callable(self, "_on_player_died"))
+		
 	# Ensure caution_label is hidden (we use an image background instead)
 	if caution_label != null:
 		caution_label.visible = false
@@ -101,6 +107,9 @@ func _on_enemy_tree_exited(enemy: Node) -> void:
 		_caution_set.erase(enemy)
 		_update_ui_visibility()
 
+	if _caution_set.size() == 0:
+		_stop_caution_sound()
+
 func _on_enemy_caution_started(enemy: Node) -> void:
 	if not is_instance_valid(enemy):
 		return
@@ -108,11 +117,15 @@ func _on_enemy_caution_started(enemy: Node) -> void:
 		return
 	_caution_set.append(enemy)
 	_update_ui_visibility()
-
+	_start_caution_sound()
+	
 func _on_enemy_caution_ended(enemy: Node) -> void:
 	if enemy in _caution_set:
 		_caution_set.erase(enemy)
 	_update_ui_visibility()
+	
+	if _caution_set.size() == 0:
+		_stop_caution_sound()
 
 func _update_ui_visibility() -> void:
 	# Basic visibility based on _caution_set
@@ -212,3 +225,16 @@ func _process(_delta: float) -> void:
 	# If no combat/caution/timer -> hide UI
 	if not any_combat and _caution_set.size() == 0 and (timer_label == null or not timer_label.visible):
 		_safe_set_visible(false)
+
+func _start_caution_sound() -> void:
+	if caution_sound != null and not caution_sound.playing:
+		caution_sound.play()
+
+func _stop_caution_sound() -> void:
+	if caution_sound != null and caution_sound.playing:
+		caution_sound.stop()
+		
+func _on_player_died() -> void:
+	_caution_set.clear()
+	_stop_caution_sound()
+	_safe_set_visible(false)

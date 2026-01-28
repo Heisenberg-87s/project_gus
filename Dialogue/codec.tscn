@@ -1,11 +1,14 @@
-[gd_scene load_steps=25 format=3 uid="uid://du17cyxj54hum"]
+[gd_scene load_steps=34 format=3 uid="uid://du17cyxj54hum"]
 
 [ext_resource type="Script" uid="uid://drjnq1cv6jx4y" path="res://Dialogue/codec.gd" id="1_4nldh"]
 [ext_resource type="PackedScene" uid="uid://ckvgyvclnwggo" path="res://addons/dialogue_manager/dialogue_label.tscn" id="2_a8ve6"]
 [ext_resource type="Texture2D" uid="uid://do8o7y2fgqdsa" path="res://assets/Characters/Shadow/portrait.png" id="2_jgwlt"]
 [ext_resource type="Texture2D" uid="uid://bohrhmes48yc" path="res://assets/SKIP_TEXT.png" id="3_4nldh"]
 [ext_resource type="Script" uid="uid://bb52rsfwhkxbn" path="res://addons/dialogue_manager/dialogue_responses_menu.gd" id="3_72ixx"]
+[ext_resource type="Texture2D" uid="uid://dco6311xmou62" path="res://assets/Freq.png" id="3_hq1ej"]
+[ext_resource type="Texture2D" uid="uid://opi4sjliblp4" path="res://assets/Characters/John/call.png" id="4_hhkyq"]
 [ext_resource type="Texture2D" uid="uid://dpjbrht186vf8" path="res://assets/pistol.png" id="6_k043q"]
+[ext_resource type="AudioStream" uid="uid://qph0m8mnr7b0" path="res://assets/audio/itemopen.wav" id="9_hhkyq"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_spyqn"]
 bg_color = Color(0, 0, 0, 1)
@@ -63,6 +66,106 @@ MarginContainer/constants/margin_left = 30
 MarginContainer/constants/margin_right = 30
 MarginContainer/constants/margin_top = 15
 PanelContainer/styles/panel = SubResource("StyleBoxFlat_qkmqt")
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gl3n3"]
+atlas = ExtResource("3_hq1ej")
+region = Rect2(48, 32, 48, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j3acb"]
+atlas = ExtResource("3_hq1ej")
+region = Rect2(0, 64, 48, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_omwvr"]
+atlas = ExtResource("3_hq1ej")
+region = Rect2(48, 64, 48, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kpxfu"]
+atlas = ExtResource("3_hq1ej")
+region = Rect2(0, 96, 48, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sn04f"]
+atlas = ExtResource("3_hq1ej")
+region = Rect2(48, 96, 48, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_vexya"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gl3n3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j3acb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_omwvr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kpxfu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sn04f")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_omwvr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kpxfu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_omwvr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kpxfu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sn04f")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kpxfu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_omwvr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j3acb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j3acb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kpxfu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sn04f")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kpxfu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sn04f")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kpxfu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sn04f")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_omwvr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kpxfu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sn04f")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_omwvr")
+}],
+"loop": true,
+"name": &"default",
+"speed": 6.0
+}]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_k043q"]
 atlas = ExtResource("3_4nldh")
@@ -157,9 +260,21 @@ tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
 "times": PackedFloat32Array(0, 0.23333333),
-"transitions": PackedFloat32Array(1, 1),
+"transitions": PackedFloat32Array(0.21763788, 1),
 "update": 0,
 "values": [Vector2(1e-05, 1e-05), Vector2(6, 6)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("poupsfx:playing")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.23333333),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [true, false]
 }
 
 [sub_resource type="Animation" id="Animation_k043q"]
@@ -173,7 +288,7 @@ tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
 "times": PackedFloat32Array(0, 0.2333),
-"transitions": PackedFloat32Array(1, 1),
+"transitions": PackedFloat32Array(0.24148433, 1),
 "update": 0,
 "values": [Vector2(6, 6), Vector2(0, 0)]
 }
@@ -191,6 +306,18 @@ tracks/0/keys = {
 "transitions": PackedFloat32Array(1),
 "update": 0,
 "values": [Vector2(1e-05, 1e-05)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("poupsfx:playing")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
 }
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_hhkyq"]
@@ -292,15 +419,26 @@ theme_override_colors/default_color = Color(0, 0, 0, 1)
 text = "NONE"
 horizontal_alignment = 1
 
-[node name="Freq" type="RichTextLabel" parent="Balloon"]
+[node name="Freq" type="AnimatedSprite2D" parent="Balloon"]
+position = Vector2(653, 237)
+scale = Vector2(5, 5)
+sprite_frames = SubResource("SpriteFrames_vexya")
+autoplay = "default"
+frame_progress = 0.47762516
+
+[node name="call" type="TextureRect" parent="Balloon"]
+unique_name_in_owner = true
+z_index = 1
+custom_minimum_size = Vector2(48, 32)
 layout_mode = 0
-offset_left = 456.0
-offset_top = 177.0
-offset_right = 850.0
-offset_bottom = 360.0
-theme_override_font_sizes/normal_font_size = 49
-text = "•၊၊||၊|။||||။၊|။•
-095.40"
+offset_left = 593.0
+offset_top = 231.0
+offset_right = 641.0
+offset_bottom = 271.0
+scale = Vector2(4, 4)
+texture = ExtResource("4_hhkyq")
+expand_mode = 1
+stretch_mode = 4
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Balloon"]
 position = Vector2(1190, 670)
@@ -400,6 +538,7 @@ unique_name_in_owner = true
 
 [node name="TypeSoundPlayer" type="AudioStreamPlayer" parent="."]
 unique_name_in_owner = true
+volume_db = -3.0
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {
@@ -407,9 +546,13 @@ libraries = {
 }
 
 [node name="Pistol" type="Sprite2D" parent="."]
-position = Vector2(743, 310)
+position = Vector2(688, 370)
 scale = Vector2(1e-05, 1e-05)
 texture = ExtResource("6_k043q")
+
+[node name="poupsfx" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("9_hhkyq")
+volume_db = -6.0
 
 [connection signal="gui_input" from="Balloon" to="." method="_on_balloon_gui_input"]
 [connection signal="response_selected" from="Balloon/ResponsesMenu" to="." method="_on_responses_menu_response_selected"]

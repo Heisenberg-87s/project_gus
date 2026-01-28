@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=4 uid="uid://dvlho5xvpaje4"]
+[gd_scene load_steps=21 format=4 uid="uid://dvlho5xvpaje4"]
 
 [ext_resource type="Script" uid="uid://bqkq8pmqg8bu2" path="res://Levels/level.gd" id="1_gpluk"]
 [ext_resource type="TileSet" uid="uid://nilocb3bx5j" path="res://enviroment/trees.tres" id="2_5gpkv"]
@@ -8,6 +8,8 @@
 [ext_resource type="Texture2D" uid="uid://b222aa5kbqp0l" path="res://assets/maptiles2-1.png" id="5_5gpkv"]
 [ext_resource type="PackedScene" uid="uid://v1cx2pek8gbo" path="res://enemy/enemy.tscn" id="7_rx8p0"]
 [ext_resource type="Texture2D" uid="uid://dn4h0u13o5xo5" path="res://assets/light_alpha2.png" id="8_4d6g5"]
+[ext_resource type="PackedScene" uid="uid://pgiu4skbitvq" path="res://enviroment/codec_area.tscn" id="9_wp527"]
+[ext_resource type="Resource" uid="uid://mwm14gdjv5cx" path="res://Dialogue/ch03.dialogue" id="10_8n64j"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_wp527"]
 texture = ExtResource("4_4d6g5")
@@ -617,6 +619,9 @@ size = Vector2(90, 40)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4d6g5"]
 size = Vector2(40, 100)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wylc2"]
+size = Vector2(200, 40)
+
 [node name="forest1" type="Node2D"]
 y_sort_enabled = true
 script = ExtResource("1_gpluk")
@@ -753,6 +758,13 @@ position = Vector2(1093.9999, 697.5)
 scale = Vector2(3.3548386, 1.1268656)
 texture = ExtResource("8_4d6g5")
 flip_v = true
+
+[node name="CodecArea" parent="." instance=ExtResource("9_wp527")]
+position = Vector2(365, 145)
+dialogue = ExtResource("10_8n64j")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CodecArea"]
+shape = SubResource("RectangleShape2D_wylc2")
 
 [connection signal="timeout" from="Enemy/NavTimer" to="Enemy" method="_on_nav_timer_timeout"]
 [connection signal="timeout" from="Enemy2/NavTimer" to="Enemy2" method="_on_nav_timer_timeout"]

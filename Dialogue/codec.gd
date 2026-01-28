@@ -66,6 +66,7 @@ var mutation_cooldown: Timer = Timer.new()
 ## The base balloon anchor
 @onready var balloon: Control = %Balloon
 @onready var portrait: TextureRect = %Portrait
+@onready var call: TextureRect = %call
 
 
 ## The label showing the name of the currently speaking character
@@ -170,7 +171,16 @@ func apply_dialogue_line() -> void:
 		type_sound.stream = load(type_voice_path)
 	else:
 		type_sound.stream = null
+		
+	if dialogue_line.character == "Shadow":
+		pass
+	else:
+		var call_path: String = "res://assets/Characters/%s/call.png" % dialogue_line.character
 
+		if ResourceLoader.exists(call_path):
+			call.texture = load(call_path)
+		else:
+			call.texture = null
 
 	dialogue_label.hide()
 	dialogue_label.dialogue_line = dialogue_line

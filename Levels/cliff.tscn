@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=4 uid="uid://5sext4es0b1e"]
+[gd_scene load_steps=22 format=4 uid="uid://5sext4es0b1e"]
 
 [ext_resource type="Script" uid="uid://bqkq8pmqg8bu2" path="res://Levels/level.gd" id="1_w1a3p"]
 [ext_resource type="TileSet" uid="uid://cba4obf6j2y4r" path="res://enviroment/cliff.tres" id="2_trvba"]
@@ -12,6 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://dclgp7l6paym7" path="res://assets/grass2.png" id="8_pnpjx"]
 [ext_resource type="PackedScene" uid="uid://dq88dbc0344sd" path="res://enviroment/GrassArea.tscn" id="9_ifxu1"]
 [ext_resource type="Resource" uid="uid://dmyn3kufh2d2s" path="res://Dialogue/ch01.dialogue" id="12_ojfw4"]
+[ext_resource type="Resource" uid="uid://hsbrdsodm6op" path="res://Dialogue/ch02.dialogue" id="13_tcx6e"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ojfw4"]
 texture = ExtResource("5_ojfw4")
@@ -48,6 +49,9 @@ size = Vector2(200, 40)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_82tc5"]
 size = Vector2(40, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ojfw4"]
+size = Vector2(600, 40)
 
 [node name="Cliff" type="Node2D"]
 y_sort_enabled = true
@@ -158,3 +162,10 @@ dialogue = ExtResource("12_ojfw4")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CodecArea"]
 shape = SubResource("RectangleShape2D_82tc5")
+
+[node name="CodecArea2" parent="." instance=ExtResource("7_bmv8j")]
+position = Vector2(398, 593)
+dialogue = ExtResource("13_tcx6e")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CodecArea2"]
+shape = SubResource("RectangleShape2D_ojfw4")

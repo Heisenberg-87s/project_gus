@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="PROJECT GUS v8.4-Beta"
+config/name="PROJECT GUS v9.5-Beta"
 run/main_scene="uid://bc83xu7p5onom"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
@@ -122,7 +122,7 @@ skip_dialogue={
 
 [internationalization]
 
-locale/translations_pot_files=PackedStringArray("res://Dialogue/Test.dialogue", "res://Dialogue/test2.dialogue", "res://Dialogue/test3.dialogue", "res://Dialogue/test4.dialogue", "res://Dialogue/ch01.dialogue", "res://Dialogue/ch02.dialogue")
+locale/translations_pot_files=PackedStringArray("res://Dialogue/Test.dialogue", "res://Dialogue/test2.dialogue", "res://Dialogue/test3.dialogue", "res://Dialogue/test4.dialogue", "res://Dialogue/ch01.dialogue", "res://Dialogue/ch02.dialogue", "res://Dialogue/ch03.dialogue", "res://Dialogue/ch04.dialogue", "res://Dialogue/ch05.dialogue", "res://Dialogue/ch06.dialogue")
 
 [layer_names]
 

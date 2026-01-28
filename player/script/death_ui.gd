@@ -187,7 +187,7 @@ func _do_reload_scene() -> void:
 
 func _on_button_pressed() -> void:
 	if not SaveManager.has_save():
-		return
+		get_tree().change_scene_to_file("res://Levels/gameplay.tscn")
 
 	var data: Dictionary = await SaveManager.load_game()
 	if data.is_empty():

@@ -4,7 +4,7 @@ extends Node2D
 var skipped := false
 
 func _ready():
-	anim.play("Intro")
+	anim.play("intro")
 	anim.animation_finished.connect(_on_anim_end)
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -21,7 +21,7 @@ func skip_intro():
 	_go_to_gameplay()
 
 func _on_anim_end(name: StringName) -> void:
-	if name == "Intro" and not skipped:
+	if name == "intro" and not skipped:
 		_go_to_gameplay()
 
 func _go_to_gameplay():

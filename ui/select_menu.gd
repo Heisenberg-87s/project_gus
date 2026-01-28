@@ -18,7 +18,7 @@ func _on_newgame_pressed() -> void:
 	
 func _on_animation_finished(anim_name: StringName) -> void:
 	if anim_name == "MenuFade":
-		get_tree().change_scene_to_file("res://Levels/intro-test.tscn")
+		get_tree().change_scene_to_file("res://Levels/intro.tscn")
 
 func _on_continue_pressed() -> void:
 	if not SaveManager.has_save():

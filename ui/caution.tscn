@@ -1,7 +1,8 @@
-[gd_scene load_steps=12 format=3 uid="uid://b5uucg08n6mr3"]
+[gd_scene load_steps=13 format=3 uid="uid://b5uucg08n6mr3"]
 
 [ext_resource type="Script" uid="uid://db8ofla4gwff8" path="res://ui/enemy_alert_ui.gd" id="1_e3u25"]
 [ext_resource type="Texture2D" uid="uid://dl1vqxo5tqrpm" path="res://assets/ALERT_TEXT.png" id="2_27mrr"]
+[ext_resource type="AudioStream" uid="uid://do0w0e8c5vwth" path="res://assets/audio/Metal-Gear-Solid-Battle-music-_psone_.wav" id="3_n0wl8"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e3u25"]
 bg_color = Color(0.6455514, 1.8289685e-06, 3.3691526e-07, 1)
@@ -272,3 +273,7 @@ libraries = {
 &"": SubResource("AnimationLibrary_ps61q")
 }
 autoplay = "alerttextanim"
+
+[node name="CautionSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3_n0wl8")
+volume_db = -6.0
