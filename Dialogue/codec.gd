@@ -2,9 +2,12 @@ extends CanvasLayer
 ## A basic dialogue balloon for use with Dialogue Manager.
 var is_skipping := false
 var skip_speed := 9999.0
-var normal_speed := 1.0
+var normal_speed := 0.5
+var _auto_next_timer: SceneTreeTimer = null
 
 var skip_held := false
+
+var _last_visible_ratio := 0
 
 ## The dialogue resource
 @export var dialogue_resource: DialogueResource
@@ -23,6 +26,10 @@ var skip_held := false
 
 ## A sound player for voice lines (if they exist).
 @onready var audio_stream_player: AudioStreamPlayer = %AudioStreamPlayer
+
+## A sound player typewriting
+@onready var type_sound: AudioStreamPlayer = %TypeSoundPlayer
+
 
 ## Temporary game states
 var temporary_game_states: Array = []
@@ -89,7 +96,7 @@ func _ready() -> void:
 		if not is_instance_valid(dialogue_resource):
 			assert(false, DMConstants.get_error_message(DMConstants.ERR_MISSING_RESOURCE_FOR_AUTOSTART))
 		start()
-
+	
 
 func _process(delta: float) -> void:
 	if skip_held:
@@ -98,6 +105,11 @@ func _process(delta: float) -> void:
 	if is_instance_valid(dialogue_line):
 		progress.visible = not dialogue_label.is_typing and dialogue_line.responses.size() == 0 and not dialogue_line.has_tag("voice")
 		
+	if dialogue_label.is_typing and type_sound.stream:
+		if dialogue_label.visible_ratio > _last_visible_ratio:
+			_last_visible_ratio = dialogue_label.visible_ratio
+			if not type_sound.playing:
+				type_sound.play()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(skip_action):
@@ -134,6 +146,7 @@ func start(with_dialogue_resource: DialogueResource = null, title: String = "", 
 ## Apply any changes to the balloon given a new [DialogueLine].
 func apply_dialogue_line() -> void:
 	mutation_cooldown.stop()
+	_last_visible_ratio = 0.0
 
 	progress.hide()
 	is_waiting_for_input = false
@@ -151,7 +164,13 @@ func apply_dialogue_line() -> void:
 			portrait.texture = load(portrait_path)
 		else:
 			portrait.texture = null
-		
+	
+	var type_voice_path := "res://assets/Characters/%s/type.wav" % dialogue_line.character
+	if ResourceLoader.exists(type_voice_path):
+		type_sound.stream = load(type_voice_path)
+	else:
+		type_sound.stream = null
+
 
 	dialogue_label.hide()
 	dialogue_label.dialogue_line = dialogue_line
@@ -179,7 +198,9 @@ func apply_dialogue_line() -> void:
 		responses_menu.show()
 	elif dialogue_line.time != "":
 		var time: float = dialogue_line.text.length() * 0.02 if dialogue_line.time == "auto" else dialogue_line.time.to_float()
-		await get_tree().create_timer(time).timeout
+		_auto_next_timer = get_tree().create_timer(time)
+		await _auto_next_timer.timeout
+		_auto_next_timer = null
 		next(dialogue_line.next_id)
 	else:
 		is_waiting_for_input = true
@@ -241,14 +262,29 @@ func _on_responses_menu_response_selected(response: DialogueResponse) -> void:
 	next(response.next_id)
 
 func _skip_to_next() -> void:
+	# ❌ หยุด timer auto-next
+	if _auto_next_timer:
+		_auto_next_timer = null
+
+	# ❌ หยุดเสียง
+	if audio_stream_player.playing:
+		audio_stream_player.stop()
+
+	# ❌ หยุด typing
 	if dialogue_label.is_typing:
 		dialogue_label.skip_typing()
-		return
 
-	if is_waiting_for_input and dialogue_line.responses.size() == 0:
+	# ❌ ถ้ายังไม่ถึงจุดรอ input ให้ไปต่อทันที
+	if dialogue_line and dialogue_line.next_id != "":
+		is_waiting_for_input = false
 		next(dialogue_line.next_id)
 
 
+@onready var anim: AnimationPlayer = $AnimationPlayer
+func play_P320():
+	anim.play("P320")
 
+func end_P320():
+	anim.play("P320-end")
 
 #endregion

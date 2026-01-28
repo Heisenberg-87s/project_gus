@@ -1,11 +1,10 @@
-[gd_scene load_steps=25 format=3 uid="uid://du17cyxj54hum"]
+[gd_scene load_steps=20 format=3 uid="uid://d4nyf5taka2d8"]
 
-[ext_resource type="Script" uid="uid://drjnq1cv6jx4y" path="res://Dialogue/codec.gd" id="1_4nldh"]
-[ext_resource type="PackedScene" uid="uid://ckvgyvclnwggo" path="res://addons/dialogue_manager/dialogue_label.tscn" id="2_a8ve6"]
-[ext_resource type="Texture2D" uid="uid://do8o7y2fgqdsa" path="res://assets/Characters/Shadow/portrait.png" id="2_jgwlt"]
-[ext_resource type="Texture2D" uid="uid://bohrhmes48yc" path="res://assets/SKIP_TEXT.png" id="3_4nldh"]
-[ext_resource type="Script" uid="uid://bb52rsfwhkxbn" path="res://addons/dialogue_manager/dialogue_responses_menu.gd" id="3_72ixx"]
-[ext_resource type="Texture2D" uid="uid://dpjbrht186vf8" path="res://assets/pistol.png" id="6_k043q"]
+[ext_resource type="Script" uid="uid://drjnq1cv6jx4y" path="res://Dialogue/codec.gd" id="1_v0kor"]
+[ext_resource type="Texture2D" uid="uid://do8o7y2fgqdsa" path="res://assets/Characters/Shadow/portrait.png" id="2_gjov8"]
+[ext_resource type="Texture2D" uid="uid://bohrhmes48yc" path="res://assets/SKIP_TEXT.png" id="3_hquot"]
+[ext_resource type="PackedScene" uid="uid://ckvgyvclnwggo" path="res://addons/dialogue_manager/dialogue_label.tscn" id="4_6ktne"]
+[ext_resource type="Script" uid="uid://bb52rsfwhkxbn" path="res://addons/dialogue_manager/dialogue_responses_menu.gd" id="5_qtl53"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_spyqn"]
 bg_color = Color(0, 0, 0, 1)
@@ -65,23 +64,23 @@ MarginContainer/constants/margin_top = 15
 PanelContainer/styles/panel = SubResource("StyleBoxFlat_qkmqt")
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_k043q"]
-atlas = ExtResource("3_4nldh")
+atlas = ExtResource("3_hquot")
 region = Rect2(0, 0, 48, 48)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_euhtl"]
-atlas = ExtResource("3_4nldh")
+atlas = ExtResource("3_hquot")
 region = Rect2(48, 0, 48, 48)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_hq1ej"]
-atlas = ExtResource("3_4nldh")
+atlas = ExtResource("3_hquot")
 region = Rect2(0, 48, 48, 48)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_hhkyq"]
-atlas = ExtResource("3_4nldh")
+atlas = ExtResource("3_hquot")
 region = Rect2(48, 48, 48, 48)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_hn05e"]
-atlas = ExtResource("3_4nldh")
+atlas = ExtResource("3_hquot")
 region = Rect2(0, 96, 48, 48)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_j3acb"]
@@ -146,63 +145,9 @@ _data = {
 &"progress": SubResource("Animation_qkmqt")
 }
 
-[sub_resource type="Animation" id="Animation_euhtl"]
-resource_name = "P320"
-length = 0.25
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("Pistol:scale")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.23333333),
-"transitions": PackedFloat32Array(1, 1),
-"update": 0,
-"values": [Vector2(1e-05, 1e-05), Vector2(6, 6)]
-}
-
-[sub_resource type="Animation" id="Animation_k043q"]
-resource_name = "P320-end"
-length = 0.25
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("Pistol:scale")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.2333),
-"transitions": PackedFloat32Array(1, 1),
-"update": 0,
-"values": [Vector2(6, 6), Vector2(0, 0)]
-}
-
-[sub_resource type="Animation" id="Animation_hq1ej"]
-length = 0.001
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("Pistol:scale")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 0,
-"values": [Vector2(1e-05, 1e-05)]
-}
-
-[sub_resource type="AnimationLibrary" id="AnimationLibrary_hhkyq"]
-_data = {
-&"P320": SubResource("Animation_euhtl"),
-&"P320-end": SubResource("Animation_k043q"),
-&"RESET": SubResource("Animation_hq1ej")
-}
-
 [node name="Codec" type="CanvasLayer"]
 layer = 100
-script = ExtResource("1_4nldh")
+script = ExtResource("1_v0kor")
 
 [node name="Balloon" type="Control" parent="."]
 unique_name_in_owner = true
@@ -221,20 +166,18 @@ offset_bottom = 720.0
 color = Color(0, 0, 0, 0.8117647)
 
 [node name="Profile" type="TextureRect" parent="Balloon"]
-z_index = 1
 custom_minimum_size = Vector2(200, 250)
 layout_mode = 0
 offset_left = 917.0
 offset_top = 107.0
 offset_right = 1067.0
 offset_bottom = 257.0
-texture = ExtResource("2_jgwlt")
+texture = ExtResource("2_gjov8")
 expand_mode = 1
 stretch_mode = 6
 
 [node name="Portrait" type="TextureRect" parent="Balloon"]
 unique_name_in_owner = true
-z_index = 1
 custom_minimum_size = Vector2(200, 250)
 layout_mode = 0
 offset_left = 182.0
@@ -243,54 +186,6 @@ offset_right = 332.0
 offset_bottom = 257.0
 expand_mode = 1
 stretch_mode = 6
-
-[node name="Backportrait" type="ColorRect" parent="Balloon"]
-layout_mode = 0
-offset_left = 182.0
-offset_top = 107.0
-offset_right = 382.0
-offset_bottom = 357.0
-
-[node name="RichTextLabel" type="RichTextLabel" parent="Balloon/Backportrait"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -33.5
-offset_top = -20.0
-offset_right = 33.5
-offset_bottom = 20.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_colors/default_color = Color(0, 0, 0, 1)
-text = "NONE"
-horizontal_alignment = 1
-
-[node name="Backportrait2" type="ColorRect" parent="Balloon"]
-layout_mode = 0
-offset_left = 917.0
-offset_top = 107.0
-offset_right = 1117.0
-offset_bottom = 357.0
-
-[node name="RichTextLabel" type="RichTextLabel" parent="Balloon/Backportrait2"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -33.5
-offset_top = -20.0
-offset_right = 33.5
-offset_bottom = 20.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_colors/default_color = Color(0, 0, 0, 1)
-text = "NONE"
-horizontal_alignment = 1
 
 [node name="Freq" type="RichTextLabel" parent="Balloon"]
 layout_mode = 0
@@ -348,7 +243,7 @@ text = "[b]Character[/b]"
 fit_content = true
 scroll_active = false
 
-[node name="DialogueLabel" parent="Balloon/MarginContainer/PanelContainer/MarginContainer/HBoxContainer/VBoxContainer" instance=ExtResource("2_a8ve6")]
+[node name="DialogueLabel" parent="Balloon/MarginContainer/PanelContainer/MarginContainer/HBoxContainer/VBoxContainer" instance=ExtResource("4_6ktne")]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
@@ -388,7 +283,7 @@ grow_vertical = 2
 size_flags_vertical = 8
 theme_override_constants/separation = 2
 alignment = 1
-script = ExtResource("3_72ixx")
+script = ExtResource("5_qtl53")
 response_template = NodePath("ResponseExample")
 
 [node name="ResponseExample" type="Button" parent="Balloon/ResponsesMenu"]
@@ -400,16 +295,6 @@ unique_name_in_owner = true
 
 [node name="TypeSoundPlayer" type="AudioStreamPlayer" parent="."]
 unique_name_in_owner = true
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-libraries = {
-&"": SubResource("AnimationLibrary_hhkyq")
-}
-
-[node name="Pistol" type="Sprite2D" parent="."]
-position = Vector2(743, 310)
-scale = Vector2(1e-05, 1e-05)
-texture = ExtResource("6_k043q")
 
 [connection signal="gui_input" from="Balloon" to="." method="_on_balloon_gui_input"]
 [connection signal="response_selected" from="Balloon/ResponsesMenu" to="." method="_on_responses_menu_response_selected"]

@@ -1,50 +1,17 @@
-[gd_scene load_steps=17 format=4 uid="uid://dm6f6dwbfiy7h"]
+[gd_scene load_steps=9 format=4 uid="uid://dm6f6dwbfiy7h"]
 
 [ext_resource type="Script" uid="uid://bqkq8pmqg8bu2" path="res://Levels/level.gd" id="1_d6867"]
 [ext_resource type="TileSet" uid="uid://cba4obf6j2y4r" path="res://enviroment/cliff.tres" id="2_23ree"]
 [ext_resource type="TileSet" uid="uid://g4cmev5mdtlp" path="res://enviroment/floor.tres" id="3_fqrr4"]
 [ext_resource type="TileSet" uid="uid://nilocb3bx5j" path="res://enviroment/trees.tres" id="4_0137x"]
-[ext_resource type="Texture2D" uid="uid://cm11doydeembb" path="res://assets/Bush1.png" id="5_u4gs8"]
+[ext_resource type="TileSet" uid="uid://dtk0xpyuun2j8" path="res://enviroment/env.tres" id="5_23ree"]
 [ext_resource type="PackedScene" uid="uid://b0nduhxum2stf" path="res://enviroment/DoorArea.tscn" id="6_4aowl"]
-[ext_resource type="Texture2D" uid="uid://cnepja05p0fiu" path="res://assets/Bush2.png" id="6_ycndg"]
-[ext_resource type="Texture2D" uid="uid://ck4fcptelxqh0" path="res://assets/grass1.png" id="7_12323"]
-[ext_resource type="Texture2D" uid="uid://dclgp7l6paym7" path="res://assets/grass2.png" id="8_14sn1"]
 [ext_resource type="PackedScene" uid="uid://dq88dbc0344sd" path="res://enviroment/GrassArea.tscn" id="9_en1e2"]
-
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_yfyuk"]
-texture = ExtResource("5_u4gs8")
-texture_region_size = Vector2i(70, 52)
-0:0/0 = 0
-0:0/0/y_sort_origin = 20
-
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_csxja"]
-texture = ExtResource("6_ycndg")
-texture_region_size = Vector2i(50, 44)
-0:0/0 = 0
-0:0/0/y_sort_origin = 18
-
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_71uxe"]
-texture = ExtResource("7_12323")
-texture_region_size = Vector2i(30, 40)
-0:0/0 = 0
-0:0/0/y_sort_origin = 18
-
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_105hf"]
-texture = ExtResource("8_14sn1")
-texture_region_size = Vector2i(32, 26)
-0:0/0 = 0
-0:0/0/y_sort_origin = 12
-
-[sub_resource type="TileSet" id="TileSet_nnk8w"]
-sources/0 = SubResource("TileSetAtlasSource_yfyuk")
-sources/1 = SubResource("TileSetAtlasSource_csxja")
-sources/2 = SubResource("TileSetAtlasSource_71uxe")
-sources/3 = SubResource("TileSetAtlasSource_105hf")
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_bmv8j"]
 size = Vector2(200, 40)
 
-[node name="Cliff_a" type="Node2D"]
+[node name="Cliff-a" type="Node2D"]
 y_sort_enabled = true
 script = ExtResource("1_d6867")
 
@@ -89,7 +56,7 @@ tile_set = ExtResource("4_0137x")
 y_sort_enabled = true
 scale = Vector2(2, 2)
 tile_map_data = PackedByteArray("AAADABMAAAAAAAAAAAADABQAAAAAAAAAAAADABUAAAAAAAAAAAADABYAAAAAAAAAAAAFABQAAAAAAAAAAAAEABIAAAAAAAAAAAAGABcAAAAAAAAAAAADABcAAAAAAAAAAAARABYAAQAAAAAAAAATABYAAQAAAAAAAAAUABYAAQAAAAAAAAAUABQAAQAAAAAAAAAGAA4AAwAAAAAAAAASAA8AAwAAAAAAAAAQABMAAwAAAAAAAAAJABgAAgAAAAAAAAAOABsAAgAAAAAAAAA=")
-tile_set = SubResource("TileSet_nnk8w")
+tile_set = ExtResource("5_23ree")
 
 [node name="GrassArea" parent="." instance=ExtResource("9_en1e2")]
 
@@ -124,7 +91,6 @@ shape = SubResource("RectangleShape2D_bmv8j")
 position = Vector2(0, -41)
 
 [node name="Background" type="Control" parent="."]
-visible = false
 layout_mode = 3
 anchors_preset = 0
 offset_right = 1280.0

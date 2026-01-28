@@ -29,6 +29,8 @@ const _SEARCH_SCAN_DIRS: Array = [Vector2.RIGHT, Vector2.UP, Vector2.LEFT, Vecto
 var _search_is_scanning: bool = false
 var _search_scan_dir_timer: float = 0.45
 var shoot_cd := false
+var can_shoot := true
+
 # -----------------------
 # การตั้งค่าการมอง/การตรวจจับ
 # -----------------------
@@ -1043,11 +1045,16 @@ func _get_player_node() -> Node:
 
 # ---------- Shooting helpers ----------
 func _shoot_at_player(player_node: Node) -> void:
+	if not can_shoot:
+		return
 	if shoot_cd:
 		return
-	if player_node == null or not is_instance_valid(player_node):
-		return
+	player_node.died.connect(_on_player_died)
 
+		
+	if "health" in player_node and player_node.health <= 0:
+		return
+	
 	shoot_cd = true
 
 	var target_pos := _get_player_aim_position(player_node)
@@ -1059,7 +1066,10 @@ func _shoot_at_player(player_node: Node) -> void:
 
 	await get_tree().create_timer(0.15).timeout
 	shoot_cd = false
-	
+
+func _on_player_died():
+	can_shoot = false
+
 	
 func _shoot_at_position(target_pos: Vector2) -> void:
 	var origin = global_position

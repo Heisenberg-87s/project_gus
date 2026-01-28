@@ -9,9 +9,9 @@
 [ext_resource type="Texture2D" uid="uid://cnepja05p0fiu" path="res://assets/Bush2.png" id="6_tcx6e"]
 [ext_resource type="PackedScene" uid="uid://pgiu4skbitvq" path="res://enviroment/codec_area.tscn" id="7_bmv8j"]
 [ext_resource type="Texture2D" uid="uid://ck4fcptelxqh0" path="res://assets/grass1.png" id="7_suj7f"]
-[ext_resource type="Resource" uid="uid://dmyn3kufh2d2s" path="res://Dialogue/ch01.dialogue" id="8_7hr7k"]
 [ext_resource type="Texture2D" uid="uid://dclgp7l6paym7" path="res://assets/grass2.png" id="8_pnpjx"]
 [ext_resource type="PackedScene" uid="uid://dq88dbc0344sd" path="res://enviroment/GrassArea.tscn" id="9_ifxu1"]
+[ext_resource type="Resource" uid="uid://dmyn3kufh2d2s" path="res://Dialogue/ch01.dialogue" id="12_ojfw4"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ojfw4"]
 texture = ExtResource("5_ojfw4")
@@ -133,7 +133,6 @@ shape = SubResource("RectangleShape2D_bmv8j")
 position = Vector2(0, -41)
 
 [node name="Background" type="Control" parent="."]
-visible = false
 layout_mode = 3
 anchors_preset = 0
 offset_right = 1280.0
@@ -153,9 +152,9 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.8117647, 0.9254902, 0.88235295, 1)
 
-[node name="CodecArea" parent="." instance=ExtResource("7_bmv8j")]
+[node name="CodecArea" parent="." groups=["level_camera"] instance=ExtResource("7_bmv8j")]
 position = Vector2(395, 419)
-dialogue = ExtResource("8_7hr7k")
+dialogue = ExtResource("12_ojfw4")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CodecArea"]
 shape = SubResource("RectangleShape2D_82tc5")

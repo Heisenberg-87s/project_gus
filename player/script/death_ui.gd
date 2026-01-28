@@ -1,18 +1,5 @@
 extends Control
-# Death UI controller (Godot 4)
-# Press Enter (ui_accept) to restart support added.
-#
-# Expected scene tree under this Control:
-#  - ColorRect "Fade"
-#  - Panel/VBoxContainer "Panel"
-#      - VideoPlayer "Video" (optional)
-#      - RichTextLabel or Label "Message"
-#      - Button "RestartButton"
-#  - AudioStreamPlayer "Sfx" (optional)
-#
-# Usage: attach this script to your DeathUI Control (under a CanvasLayer).
-# Pressing the configured action (default "ui_accept" / Enter) when the panel is visible
-# and restart is enabled will trigger the same restart behaviour as the RestartButton.
+
 
 @export var fade_in_time: float = 1.0
 @export var panel_fade_delay: float = 0.3
@@ -196,3 +183,18 @@ func _on_restart_pressed() -> void:
 
 func _do_reload_scene() -> void:
 	get_tree().reload_current_scene()
+
+
+func _on_button_pressed() -> void:
+	if not SaveManager.has_save():
+		return
+
+	var data: Dictionary = await SaveManager.load_game()
+	if data.is_empty():
+		return
+
+	# 🔥 บอกไว้ล่วงหน้า
+	SaveManager.is_continue = true
+	SaveManager.pending_continue_data = data
+
+	get_tree().change_scene_to_file("res://Levels/gameplay.tscn")

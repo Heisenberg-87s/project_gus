@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://b7amee10oayhq" path="res://player/script/death_ui.gd" id="1_k3ily"]
 [ext_resource type="VideoStream" uid="uid://co4cklakygjwj" path="res://assets/video/Metal-Gear-Solid-Game-Over-screen.ogv" id="2_bkfim"]
-[ext_resource type="AudioStream" uid="uid://xhdur7gvj1bv" path="res://assets/audio/death.ogg" id="2_f5mgm"]
+[ext_resource type="AudioStream" uid="uid://btg02dni1jlct" path="res://assets/audio/gameover.wav" id="3_bkfim"]
 
 [node name="GameOverUI" type="Control"]
 layout_mode = 3
@@ -21,7 +21,6 @@ grow_vertical = 2
 color = Color(0, 0, 0, 1)
 
 [node name="Panel" type="Panel" parent="."]
-visible = false
 layout_mode = 1
 anchors_preset = -1
 anchor_right = 32.0
@@ -53,5 +52,22 @@ scale = Vector2(0.665, 0.665)
 stream = ExtResource("2_bkfim")
 volume_db = -80.0
 
+[node name="Button" type="Button" parent="Panel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -86.0
+offset_top = 74.0
+offset_right = 95.0
+offset_bottom = 129.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "continue"
+
 [node name="Sfx" type="AudioStreamPlayer2D" parent="."]
-stream = ExtResource("2_f5mgm")
+stream = ExtResource("3_bkfim")
+
+[connection signal="pressed" from="Panel/Button" to="." method="_on_button_pressed"]

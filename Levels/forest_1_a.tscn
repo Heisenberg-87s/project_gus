@@ -613,7 +613,7 @@ size = Vector2(120, 40)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_5gpkv"]
 size = Vector2(40, 86)
 
-[node name="forest1" type="Node2D"]
+[node name="forest1-a" type="Node2D"]
 y_sort_enabled = true
 script = ExtResource("1_f2ibs")
 

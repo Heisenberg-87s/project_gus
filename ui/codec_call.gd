@@ -19,10 +19,8 @@ func play_codec():
 	active = true
 	visible = true
 	
-	var gameplay = get_tree().get_first_node_in_group("gameplay")
-	if gameplay:
-		var levelholder = gameplay.get_node("LevelHolder")
-		levelholder.process_mode = Node.PROCESS_MODE_DISABLED
+
+	call_deferred("_disable_levelholder")
 	anim.play("codec_call")
 	
 # ======= skip dialogue ============
@@ -40,8 +38,16 @@ func _on_animation_finished(name: StringName) -> void:
 func _on_dialogue_ended(_res):
 	if active:
 		anim.play("codec_end")
+	call_deferred("_enable_levelholder")
+		
+func _disable_levelholder():
+	var gameplay = get_tree().get_first_node_in_group("gameplay")
+	if gameplay:
+		var levelholder = gameplay.get_node("LevelHolder")
+		levelholder.process_mode = Node.PROCESS_MODE_DISABLED
+		
+func _enable_levelholder() -> void:
 	var gameplay = get_tree().get_first_node_in_group("gameplay")
 	if gameplay:
 		var levelholder = gameplay.get_node("LevelHolder")
 		levelholder.process_mode = Node.PROCESS_MODE_INHERIT
-		

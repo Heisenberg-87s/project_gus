@@ -16,7 +16,7 @@ const FRICTION: float = 1500.0
 @export var crawl_speed := 70.0
 
 # ===== SPRITE Y OFFSET (SNEAK/CRAWL) =====
-@export var sneak_offset_y := 5.0
+@export var sneak_offset_y := 0.0
 @export var crawl_offset_y := 9.0
 @export var offset_lerp_speed := 15.0
 var _base_sprite_pos: Vector2 = Vector2.ZERO
@@ -102,7 +102,7 @@ var facing: Vector2 = Vector2.DOWN
 # ===== WALL CLING CONFIG (exported so editable in Inspector) =====
 @export var wall_cling_enabled: bool = true
 @export var wall_cling_push_distance: float = 1.0
-@export var wall_cling_peek_offset: float = 100.0
+@export var wall_cling_peek_offset: float = 200.0
 @export var wall_cling_push_speed: float = 1.0
 @export var wall_cling_camera_time: float = 0.18
 # default allowed states (but we'll also require mode == Mode.NORMAL)
@@ -115,7 +115,7 @@ var _saved_footstep_enabled: bool = true
 var _peek_tween: Tween = null
 
 # ===== PUNCH (melee) =====
-@export var punch_duration: float = 0.4
+@export var punch_duration: float = 0.5
 @export var punch_cooldown: float = 0.0
 @export var punch_move_multiplier: float = 0.4
 @export var punch_reach: float = 28.0
@@ -135,7 +135,7 @@ var _gun_cooldown: float = 0.0
 # temporary shoot animation
 var _temp_anim_name: String = ""
 var _temp_anim_timer: float = 0.0
-@export var shoot_anim_time: float = 0.2
+@export var shoot_anim_time: float = 0.4
 var _current_anim: String = ""
 
 # ===== Crouch / Sit stand-delay (new) =====
@@ -151,6 +151,8 @@ var health: int = 100
 var _invuln_timer: float = 0.0
 
 signal player_spawned(player)
+
+@onready var anim: AnimationPlayer = $AnimationPlayer
 
 signal died
 
@@ -503,7 +505,9 @@ func _process(delta: float) -> void:
 			_start_punch()
 
 	if Input.is_action_just_pressed("sound_detect"):
-		if _sound_emit_cooldown_timer <= 0.0:
+		if not _is_wall_clinging:
+			return
+		elif _sound_emit_cooldown_timer <= 0.0 and _is_wall_clinging:
 			var sa = SOUND_AREA_SCENE.instantiate()
 			sa.global_position = global_position
 			sa.radius = sound_detect_radius
@@ -512,6 +516,7 @@ func _process(delta: float) -> void:
 			sa.sound_sfx = sound_emit_sfx
 			get_tree().current_scene.add_child(sa)
 			_sound_emit_cooldown_timer = sound_emit_cooldown_time
+			
 
 	# state updates (don't change during punch or while wall clinging)
 	if state != State.PUNCH and not _is_wall_clinging:
@@ -1250,25 +1255,35 @@ func take_damage(amount: int, source: Node = null) -> void:
 func _die() -> void:
 	set_process(false)
 	set_physics_process(false)
+
 	if "velocity" in self:
 		velocity = Vector2.ZERO
+
 	if has_node("DeathSound"):
 		var ds = get_node("DeathSound")
 		if ds != null and ds.has_method("play"):
 			ds.play()
-	if animated_sprite != null and animated_sprite.sprite_frames != null:
-		var death_candidates: Array = ["death", "die", "dead"]
-		for a in death_candidates:
-			if animated_sprite.sprite_frames.has_animation(a):
-				animated_sprite.animation = a
-				animated_sprite.play()
-				break
+
+	if anim != null:
+		if anim.has_animation("die"):
+			if not anim.animation_finished.is_connected(_on_die_animation_finished):
+				anim.animation_finished.connect(_on_die_animation_finished)
+			anim.play("die")
+		else:
+			# fallback ถ้าไม่มี animation
+			emit_signal("died")
+	else:
+		emit_signal("died")
+
 	if body_collision != null:
 		body_collision.disabled = true
+
 	if hurtbox_area != null:
-		hurtbox_area.monitoring = false
 		hurtbox_area.set_deferred("monitoring", false)
-	emit_signal("died")
+		
+func _on_die_animation_finished(anim_name: StringName) -> void:
+	if anim_name == "die":
+		emit_signal("died")
 
 #-- Healing --
 func heal(amount: int, source: Node = null) -> bool:
